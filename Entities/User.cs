@@ -18,6 +18,5 @@ namespace ecommerce_API
         [Required]
         public string email { get; set; } = string.Empty;
         public string imageUrl { get; set; } = string.Empty;
-        public bool isAdmin { get; set; } = false;
     }
 }

@@ -6,7 +6,6 @@ namespace ecommerce_API
 {
         [Table("Admins")]
         [Index("userName", IsUnique = true)]
-        [Index("password", IsUnique = true)]
     public class Admin
     {
 

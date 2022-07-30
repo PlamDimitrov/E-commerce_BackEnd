@@ -53,7 +53,7 @@ namespace ecommerce_API.JwtHelpers
                 throw;
             }
         }
-        public static UserTokens SetToken(JwtSettings jwtSettings, User userFromDataBase)
+        public static UserTokens SetUserToken(JwtSettings jwtSettings, User userFromDataBase)
         {
             var userData = userFromDataBase;
             var token = GenTokenkey(new UserTokens()
@@ -61,6 +61,19 @@ namespace ecommerce_API.JwtHelpers
                 GuidId = Guid.NewGuid(),
                 UserName = userData.userName,
                 Id = userFromDataBase.Id,
+                ExpiredTime = DateTime.Now.AddDays(2)
+            }, jwtSettings);
+
+            return token;
+        }
+        public static UserTokens SetAdminToken(JwtSettings jwtSettings, Admin adminFromDataBase)
+        {
+            var adminData = adminFromDataBase;
+            var token = GenTokenkey(new UserTokens()
+            {
+                GuidId = Guid.NewGuid(),
+                UserName = adminData.userName,
+                Id = adminFromDataBase.Id,
                 ExpiredTime = DateTime.Now.AddDays(2)
             }, jwtSettings);
 
@@ -92,6 +105,7 @@ namespace ecommerce_API.JwtHelpers
                 return null;
             }
         }
+
         public async static Task<bool> CheckObsoleteToken(string token, ecommerce_APIContext _context)
         {
             try

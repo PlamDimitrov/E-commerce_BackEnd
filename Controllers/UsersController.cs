@@ -103,8 +103,8 @@ namespace ecommerce_API.Controllers
             {
                 _context.User.Add(userWithHashedPassword);
                 await _context.SaveChangesAsync();
-
-                return CreatedAtAction("GetUser", new { id = user.Id }, user);
+                userWithHashedPassword.password = null; 
+                return Ok(userWithHashedPassword);
 
             }
             catch (Exception)
@@ -131,7 +131,7 @@ namespace ecommerce_API.Controllers
                 }
                 if (userFromDataBase != null && verified == true)
                 {
-                   var token = JwtHelpers.JwtHelpers.SetToken(_jwtSettings, userFromDataBase.FirstOrDefault());
+                   var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase.FirstOrDefault());
                    CookieHelper.CreateTokenCookie(Response, token);
                     userFromDataBase.FirstOrDefault().password = null;
                    return Ok(userFromDataBase);

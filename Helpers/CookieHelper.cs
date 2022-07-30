@@ -26,5 +26,10 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
+
+        internal static void CreateTokenCookie(HttpResponse response, object token)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

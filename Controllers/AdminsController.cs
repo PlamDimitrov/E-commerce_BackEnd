@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ecommerce_API;
 using ecommerce_API.Data;
+using ecommerce_API.Models;
+using ecommerce_API.Helpers;
 
 namespace ecommerce_API.Controllers
 {
@@ -15,21 +17,30 @@ namespace ecommerce_API.Controllers
     public class AdminsController : ControllerBase
     {
         private readonly ecommerce_APIContext _context;
+        private readonly JwtSettings _jwtSettings;
 
-        public AdminsController(ecommerce_APIContext context)
+        public AdminsController(ecommerce_APIContext context, JwtSettings jwtSettings)
         {
             _context = context;
+            _jwtSettings = jwtSettings;
         }
 
         // GET: api/Admins
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Admin>>> GetAdmin()
+        public async Task<ActionResult<IEnumerable<Admin>>> GetAllAdmins()
         {
           if (_context.Admin == null)
           {
               return NotFound();
           }
-            return await _context.Admin.ToListAsync();
+            try
+            {
+                return await _context.Admin.ToListAsync();
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to get all admins!");
+            }
         }
 
         // GET: api/Admins/5
@@ -53,7 +64,7 @@ namespace ecommerce_API.Controllers
         // PUT: api/Admins/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAdmin(int id, Admin admin)
+        public async Task<IActionResult> UpdateAdmin(int id, Admin admin)
         {
             if (id != admin.Id)
             {
@@ -81,19 +92,64 @@ namespace ecommerce_API.Controllers
             return NoContent();
         }
 
+        [HttpPost]
+        [Route("register")]
+        public async Task<ActionResult<Admin>> RegisterAdmin(Admin admin)
+        {
+            var adminWithHashedPassword = admin;
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.password);
+            adminWithHashedPassword.password = passwordHash;
+            try
+            {
+                _context.Admin.Add(adminWithHashedPassword);
+                await _context.SaveChangesAsync();
+                adminWithHashedPassword.password = null;
+                return Ok( adminWithHashedPassword);
+
+            }
+            catch (Exception)
+            {
+
+                throw new Exception("Error: Admin not created!");
+            }
+
+        }
+
         // POST: api/Admins
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Admin>> PostAdmin(Admin admin)
+        [Route("login")]
+        public async Task<ActionResult<Admin>> LoginAdmin(Admin admin)
         {
-          if (_context.Admin == null)
-          {
-              return Problem("Entity set 'ecommerce_APIContext.Admin'  is null.");
-          }
-            _context.Admin.Add(admin);
-            await _context.SaveChangesAsync();
+            bool verified = false;
+            try
+            {
+                var adminFromDataBase = await _context.Admin
+                    .Where(u => u.userName == admin.userName)
+                    .FirstOrDefaultAsync();
+                if (adminFromDataBase != null)
+                {
+                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.password);
+                    verified = BCrypt.Net.BCrypt.Verify(admin.password, adminFromDataBase.password);
+                    adminFromDataBase.password = "*******";
+                }
+                if (adminFromDataBase != null && verified == true)
+                {
+                    var token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
+                    CookieHelper.CreateTokenCookie(Response, token);
+                    return Ok(adminFromDataBase);
+                }
+                else
+                {
+                    throw new Exception("Error: Wrong username or password!");
+                }
 
-            return CreatedAtAction("GetAdmin", new { id = admin.Id }, admin);
+
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Somethin went wrong with the login!");
+            }
         }
 
         // DELETE: api/Admins/5
