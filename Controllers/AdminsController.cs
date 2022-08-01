@@ -141,7 +141,7 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    throw new Exception("Error: Wrong username or password!");
+                    return Unauthorized("Wrong username or password!");
                 }
 
 

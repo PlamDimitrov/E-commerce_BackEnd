@@ -1,21 +1,18 @@
 {
   "format": 1,
   "restore": {
-    "E:\\GitHub\\PlamDimitrov\\E-commerce_BackEnd\\ecommerce-API.csproj": {}
+    "C:\\Personal\\Projects\\E-commerce_BackEnd\\ecommerce-API.csproj": {}
   },
   "projects": {
-    "E:\\GitHub\\PlamDimitrov\\E-commerce_BackEnd\\ecommerce-API.csproj": {
+    "C:\\Personal\\Projects\\E-commerce_BackEnd\\ecommerce-API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\GitHub\\PlamDimitrov\\E-commerce_BackEnd\\ecommerce-API.csproj",
+        "projectUniqueName": "C:\\Personal\\Projects\\E-commerce_BackEnd\\ecommerce-API.csproj",
         "projectName": "ecommerce-API",
-        "projectPath": "E:\\GitHub\\PlamDimitrov\\E-commerce_BackEnd\\ecommerce-API.csproj",
+        "projectPath": "C:\\Personal\\Projects\\E-commerce_BackEnd\\ecommerce-API.csproj",
         "packagesPath": "C:\\Users\\Hipo\\.nuget\\packages\\",
-        "outputPath": "E:\\GitHub\\PlamDimitrov\\E-commerce_BackEnd\\obj\\",
+        "outputPath": "C:\\Personal\\Projects\\E-commerce_BackEnd\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
         "configFilePaths": [
           "C:\\Users\\Hipo\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
@@ -54,6 +51,12 @@
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[6.0.4, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[6.0.7, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
@@ -100,7 +103,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     }
