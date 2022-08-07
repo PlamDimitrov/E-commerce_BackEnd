@@ -9,6 +9,7 @@ using ecommerce_API;
 using ecommerce_API.Data;
 using ecommerce_API.Models;
 using ecommerce_API.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ecommerce_API.Controllers
 {
@@ -114,6 +115,27 @@ namespace ecommerce_API.Controllers
             }
 
         }
+         [HttpPost]
+         [Route("auth")]
+         [Authorize]
+
+        public async Task<ActionResult<Admin>> AuthorizeAdmin(Admin admin)
+         {
+            var id = admin.Id;
+            var userName = admin.userName;
+            var adminFromDataBase = await _context.Admin
+                    .Where(u => u.Id == id)
+                    .FirstOrDefaultAsync();
+            if (adminFromDataBase != null && adminFromDataBase.userName == userName)
+            {
+                return Ok(admin);
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+        
 
         // POST: api/Admins
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -137,10 +159,12 @@ namespace ecommerce_API.Controllers
                 {
                     var token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
+                    CookieHelper.CreateAdminCookie(Response, adminFromDataBase);
                     return Ok(adminFromDataBase);
                 }
                 else
                 {
+                    return Unauthorized();
                     throw new Exception("Error: Wrong username or password!");
                 }
 

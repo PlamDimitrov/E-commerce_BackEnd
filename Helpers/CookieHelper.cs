@@ -1,4 +1,5 @@
 ﻿using ecommerce_API.Models;
+using System.Text.Json;
 
 namespace ecommerce_API.Helpers
 {
@@ -26,10 +27,16 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-
-        internal static void CreateTokenCookie(HttpResponse response, object token)
+                public static void CreateAdminCookie(HttpResponse response, Admin user)
         {
-            throw new NotImplementedException();
+            response.Cookies.Append("user-info", JsonSerializer.Serialize(user), new CookieOptions()
+            {
+                Expires = DateTimeOffset.Now.AddHours(24),
+                Path = "/",
+                SameSite = SameSiteMode.None,
+                HttpOnly = false,
+                Secure = true,
+            });
         }
     }
 }
