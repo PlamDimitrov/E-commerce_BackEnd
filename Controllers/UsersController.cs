@@ -103,7 +103,7 @@ namespace ecommerce_API.Controllers
             {
                 _context.User.Add(userWithHashedPassword);
                 await _context.SaveChangesAsync();
-                userWithHashedPassword.password = null; 
+                userWithHashedPassword.password = null;
                 return Ok(userWithHashedPassword);
 
             }
@@ -112,7 +112,28 @@ namespace ecommerce_API.Controllers
 
                 throw new Exception("Error: User not created!");
             }
-            
+
+        }
+
+        [HttpPost]
+        [Route("auth")]
+        [Authorize]
+
+        public async Task<ActionResult<User>> AuthorizeUser(User user)
+        {
+            var id = user.Id;
+            var userName = user.userName;
+            var userFromDataBase = await _context.User
+                    .Where(u => u.Id == id)
+                    .FirstOrDefaultAsync();
+            if (userFromDataBase != null && userFromDataBase.userName == userName)
+            {
+                return Ok(user);
+            }
+            else
+            {
+                return Unauthorized("You have no authorization!");
+            }
         }
 
         [HttpPost]
@@ -123,24 +144,26 @@ namespace ecommerce_API.Controllers
             try
             {
                 var userFromDataBase = await _context.User
-                    .Where(u =>  u.userName == userLogin.userName )
-                    .ToListAsync();
-                if (userFromDataBase.Count != 0)
+                    .Where(u => u.userName == userLogin.userName)
+                    .FirstOrDefaultAsync();
+                if (userFromDataBase != null)
                 {
-                    verified = BCrypt.Net.BCrypt.Verify(userLogin.password, userFromDataBase.FirstOrDefault().password);
+                    verified = BCrypt.Net.BCrypt.Verify(userLogin.password, userFromDataBase.password);
+                    userFromDataBase.password = "*******";
                 }
                 if (userFromDataBase != null && verified == true)
                 {
-                   var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase.FirstOrDefault());
-                   CookieHelper.CreateTokenCookie(Response, token);
-                    userFromDataBase.FirstOrDefault().password = null;
-                   return Ok(userFromDataBase);
+                    var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase);
+                    CookieHelper.CreateTokenCookie(Response, token);
+                    CookieHelper.CreateUserCookie(Response, userFromDataBase);
+                    return Ok(userFromDataBase);
                 }
                 else
                 {
+                    return Unauthorized();
                     throw new Exception("Error: Wrong username or password!");
                 }
-                
+
 
             }
             catch (Exception)
@@ -157,16 +180,16 @@ namespace ecommerce_API.Controllers
             var tokenValue = Request.Cookies["ecom-auth-token"];
             var handler = new JwtSecurityTokenHandler();
             var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
-            var expiredToken = new ExpiredToken(); 
+            var expiredToken = new ExpiredToken();
             expiredToken.ExpiredTokenValue = tokenValue;
             expiredToken.ExpiredTime = tokenValidTo;
 
             try
             {
-            _context.ExpiredTokens.Add(expiredToken);
-            await _context.SaveChangesAsync();
-            Response.Cookies.Delete("ecom-auth-token");
-            return Ok();
+                _context.ExpiredTokens.Add(expiredToken);
+                await _context.SaveChangesAsync();
+                Response.Cookies.Delete("ecom-auth-token");
+                return Ok();
 
             }
             catch (Exception)
@@ -222,8 +245,9 @@ namespace ecommerce_API.Controllers
 
                     throw new Exception("Error: User not found!"); ;
                 }
-                
-            } else
+
+            }
+            else
             {
                 throw new Exception("Error: User not authenticated!");
             }

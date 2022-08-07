@@ -132,7 +132,7 @@ namespace ecommerce_API.Controllers
             }
             else
             {
-                return Unauthorized();
+                return Unauthorized("You have no authorization!");
             }
         }
         
@@ -160,6 +160,7 @@ namespace ecommerce_API.Controllers
                     var token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
                     CookieHelper.CreateAdminCookie(Response, adminFromDataBase);
+
                     return Ok(adminFromDataBase);
                 }
                 else
