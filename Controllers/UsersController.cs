@@ -173,7 +173,7 @@ namespace ecommerce_API.Controllers
 
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("logout")]
         public async Task<ActionResult> LogoutUser()
         {
@@ -188,13 +188,13 @@ namespace ecommerce_API.Controllers
             {
                 _context.ExpiredTokens.Add(expiredToken);
                 await _context.SaveChangesAsync();
-                Response.Cookies.Delete("ecom-auth-token");
+                CookieHelper.RemoveTokenCookie(Response);
+                CookieHelper.RemoveUserCookie(Response);
                 return Ok();
 
             }
             catch (Exception)
             {
-
                 throw new Exception("Error: Token not send to database!");
             }
 
@@ -224,35 +224,6 @@ namespace ecommerce_API.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("auth")]
-        public async Task<ActionResult<User>> Authenticate()
-        {
-            string token = Request.Cookies["ecom-auth-token"];
-            var validation = JwtHelpers.JwtHelpers.ValidateJwtToken(token, _jwtSettings);
-            var isTokenObsolete = await JwtHelpers.JwtHelpers.CheckObsoleteToken(token, _context);
-            if (validation != null && !isTokenObsolete)
-            {
-                var userId = validation;
-                try
-                {
-                    var user = await _context.User.FindAsync(userId);
-                    user.password = null;
-                    return user;
-                }
-                catch (Exception)
-                {
-
-                    throw new Exception("Error: User not found!"); ;
-                }
-
-            }
-            else
-            {
-                throw new Exception("Error: User not authenticated!");
-            }
-
-        }
         private bool UserExists(int id)
         {
             return _context.User.Any(e => e.Id == id);

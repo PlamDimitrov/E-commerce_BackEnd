@@ -27,7 +27,31 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-                public static void CreateAdminCookie(HttpResponse response, Admin admin)
+
+        public static void RemoveUserCookie(HttpResponse response)
+        {
+            response.Cookies.Delete("user-info", new CookieOptions()
+            {
+                Expires = DateTimeOffset.Now.AddDays(-1),
+                Path = "/",
+                SameSite = SameSiteMode.None,
+                HttpOnly = true,
+                Secure = true,
+            });
+        }
+
+        public static void RemoveAdminCookie(HttpResponse response)
+        {
+            response.Cookies.Delete("admin-info", new CookieOptions()
+            {
+                Expires = DateTimeOffset.Now.AddDays(-1),
+                Path = "/",
+                SameSite = SameSiteMode.None,
+                HttpOnly = true,
+                Secure = true,
+            });
+        }
+        public static void CreateAdminCookie(HttpResponse response, Admin admin)
         {
             response.Cookies.Append("admin-info", JsonSerializer.Serialize(admin), new CookieOptions()
             {

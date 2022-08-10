@@ -10,6 +10,8 @@ using ecommerce_API.Data;
 using ecommerce_API.Models;
 using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using ecommerce_API.Entities;
 
 namespace ecommerce_API.Controllers
 {
@@ -30,10 +32,10 @@ namespace ecommerce_API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Admin>>> GetAllAdmins()
         {
-          if (_context.Admin == null)
-          {
-              return NotFound();
-          }
+            if (_context.Admin == null)
+            {
+                return NotFound();
+            }
             try
             {
                 return await _context.Admin.ToListAsync();
@@ -48,10 +50,10 @@ namespace ecommerce_API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Admin>> GetAdmin(int id)
         {
-          if (_context.Admin == null)
-          {
-              return NotFound();
-          }
+            if (_context.Admin == null)
+            {
+                return NotFound();
+            }
             var admin = await _context.Admin.FindAsync(id);
 
             if (admin == null)
@@ -105,7 +107,7 @@ namespace ecommerce_API.Controllers
                 _context.Admin.Add(adminWithHashedPassword);
                 await _context.SaveChangesAsync();
                 adminWithHashedPassword.password = null;
-                return Ok( adminWithHashedPassword);
+                return Ok(adminWithHashedPassword);
 
             }
             catch (Exception)
@@ -115,12 +117,12 @@ namespace ecommerce_API.Controllers
             }
 
         }
-         [HttpPost]
-         [Route("auth")]
-         [Authorize]
+        [HttpPost]
+        [Route("auth")]
+        [Authorize]
 
         public async Task<ActionResult<Admin>> AuthorizeAdmin(Admin admin)
-         {
+        {
             var id = admin.Id;
             var userName = admin.userName;
             var adminFromDataBase = await _context.Admin
@@ -135,7 +137,7 @@ namespace ecommerce_API.Controllers
                 return Unauthorized("You have no authorization!");
             }
         }
-        
+
 
         // POST: api/Admins
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -174,6 +176,31 @@ namespace ecommerce_API.Controllers
             catch (Exception)
             {
                 throw new Exception("Error: Somethin went wrong with the login!");
+            }
+        }
+
+        [HttpPost]
+        [Route("logout")]
+        public async Task<ActionResult<Admin>> LogoutAdmin()
+        {
+            var tokenValue = Request.Cookies["ecom-auth-token"];
+            var handler = new JwtSecurityTokenHandler();
+            var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
+            var expiredToken = new ExpiredToken();
+            expiredToken.ExpiredTokenValue = tokenValue;
+            expiredToken.ExpiredTime = tokenValidTo;
+            try
+            {
+                _context.ExpiredTokens.Add(expiredToken);
+                await _context.SaveChangesAsync();
+                CookieHelper.RemoveTokenCookie(Response);
+                CookieHelper.RemoveAdminCookie(Response);
+                return Ok();
+
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Token not send to database!");
             }
         }
 
