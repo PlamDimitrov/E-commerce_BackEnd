@@ -12,6 +12,7 @@ using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using ecommerce_API.Entities;
+using System.Text.Json;
 
 namespace ecommerce_API.Controllers
 {
@@ -224,6 +225,45 @@ namespace ecommerce_API.Controllers
             return NoContent();
         }
 
+        [HttpPost]
+        [Route("uploadProfilePicture")]
+        [Authorize]
+        public async Task<ActionResult<byte[]>> UploadProfilePicture()
+        {
+            IFormFile file = Request.Form.Files[0];
+            string? cookieValue = Request.Cookies["admin-info"];
+            Admin adminFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
+            try
+            {
+                var adminFromDataBase = await _context.Admin
+                        .Where(u => u.Id == adminFromCookie.Id)
+                        .FirstOrDefaultAsync();
+                if (adminFromDataBase == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        var fileBytes = ms.ToArray();
+                        string s = Convert.ToBase64String(fileBytes);
+
+                        adminFromDataBase.image = fileBytes;
+                        await _context.SaveChangesAsync();
+                        var adminFromDataBaseResponse = await _context.Admin
+                                .Where(u => u.Id == adminFromCookie.Id)
+                                .FirstOrDefaultAsync();
+                        return Ok(adminFromDataBaseResponse);
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: User not found!");
+            }
+        }
         private bool AdminExists(int id)
         {
             return (_context.Admin?.Any(e => e.Id == id)).GetValueOrDefault();

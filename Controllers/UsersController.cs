@@ -7,6 +7,8 @@ using ecommerce_API.Entities;
 using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace ecommerce_API.Controllers
 
@@ -221,6 +223,46 @@ namespace ecommerce_API.Controllers
             {
 
                 throw new Exception("Error: User not deleted!");
+            }
+        }
+
+        [HttpPost]
+        [Route("uploadProfilePicture")]
+        [Authorize]
+        public async Task<ActionResult<byte[]>> UploadProfilePicture()
+        {
+            IFormFile file = Request.Form.Files[0];
+            string cookieValue = Request.Cookies["user-info"];
+            User userFromCookie = JsonSerializer.Deserialize<User>(cookieValue);
+            try
+            {
+                var userFromDataBase = await _context.User
+                        .Where(u => u.Id == userFromCookie.Id)
+                        .FirstOrDefaultAsync();
+                if (userFromDataBase == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        var fileBytes = ms.ToArray();
+                        string s = Convert.ToBase64String(fileBytes);
+
+                        userFromDataBase.image = fileBytes;
+                        await _context.SaveChangesAsync();
+                        var userFromDataBaseSecond = await _context.User
+                                .Where(u => u.Id == userFromCookie.Id)
+                                .FirstOrDefaultAsync();
+                        return Ok(userFromDataBaseSecond);
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: User not found!");
             }
         }
 
