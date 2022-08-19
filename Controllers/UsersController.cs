@@ -155,9 +155,14 @@ namespace ecommerce_API.Controllers
                 }
                 if (userFromDataBase != null && verified == true)
                 {
+                    UserForClientCookie UserForClientCookie = new UserForClientCookie();
+                    UserForClientCookie.Id = userFromDataBase.Id;
+                    UserForClientCookie.userName = userFromDataBase.userName;
+                    UserForClientCookie.email = userFromDataBase.email;
+
                     var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateUserCookie(Response, userFromDataBase);
+                    CookieHelper.CreateUserCookie(Response, UserForClientCookie);
                     return Ok(userFromDataBase);
                 }
                 else

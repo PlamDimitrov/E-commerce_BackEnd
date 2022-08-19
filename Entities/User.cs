@@ -17,6 +17,6 @@ namespace ecommerce_API
         public string password { get; set; } = string.Empty;
         [Required]
         public string email { get; set; } = string.Empty;
-        public byte[] image { get; set; }
+        public byte[]? image { get; set; } = null;
     }
 }

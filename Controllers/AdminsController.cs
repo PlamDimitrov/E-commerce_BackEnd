@@ -107,7 +107,7 @@ namespace ecommerce_API.Controllers
             {
                 _context.Admin.Add(adminWithHashedPassword);
                 await _context.SaveChangesAsync();
-                adminWithHashedPassword.password = null;
+                adminWithHashedPassword.password = "****";
                 return Ok(adminWithHashedPassword);
 
             }
@@ -144,26 +144,31 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<Admin>> LoginAdmin(Admin admin)
+        public async Task<ActionResult<Admin>> LoginAdmin(UserLogin userLogin)
         {
             bool verified = false;
             try
             {
-                var adminFromDataBase = await _context.Admin
-                    .Where(u => u.userName == admin.userName)
+                Admin adminFromDataBase = await _context.Admin
+                    .Where(u => u.userName == userLogin.userName)
                     .FirstOrDefaultAsync();
+                
                 if (adminFromDataBase != null)
                 {
-                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.password);
-                    verified = BCrypt.Net.BCrypt.Verify(admin.password, adminFromDataBase.password);
+                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.password);
+                    verified = BCrypt.Net.BCrypt.Verify(userLogin.password, adminFromDataBase.password);
                     adminFromDataBase.password = "*******";
                 }
                 if (adminFromDataBase != null && verified == true)
                 {
-                    var token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
-                    CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateAdminCookie(Response, adminFromDataBase);
+                    UserForClientCookie UserForClientCookie = new UserForClientCookie();
+                    UserForClientCookie.Id = adminFromDataBase.Id;
+                    UserForClientCookie.userName = adminFromDataBase.userName;
+                    UserForClientCookie.email = adminFromDataBase.email;
 
+                    UserTokens token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
+                    CookieHelper.CreateTokenCookie(Response, token);
+                    CookieHelper.CreateAdminCookie(Response, UserForClientCookie); 
                     return Ok(adminFromDataBase);
                 }
                 else
@@ -235,7 +240,7 @@ namespace ecommerce_API.Controllers
             Admin adminFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
             try
             {
-                var adminFromDataBase = await _context.Admin
+                Admin adminFromDataBase = await _context.Admin
                         .Where(u => u.Id == adminFromCookie.Id)
                         .FirstOrDefaultAsync();
                 if (adminFromDataBase == null)
@@ -244,18 +249,18 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    using (var ms = new MemoryStream())
+                    using (MemoryStream ms = new MemoryStream())
                     {
                         file.CopyTo(ms);
-                        var fileBytes = ms.ToArray();
-                        string s = Convert.ToBase64String(fileBytes);
+                        byte[] fileBytes = ms.ToArray();
 
                         adminFromDataBase.image = fileBytes;
                         await _context.SaveChangesAsync();
-                        var adminFromDataBaseResponse = await _context.Admin
+                        Admin adminFromDataBaseResponse = await _context.Admin
                                 .Where(u => u.Id == adminFromCookie.Id)
                                 .FirstOrDefaultAsync();
-                        return Ok(adminFromDataBaseResponse);
+                      /*  return Ok(adminFromDataBaseResponse); */
+                        return File(adminFromDataBaseResponse.image, "image/jpg");
                     };
                 }
             }

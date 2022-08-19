@@ -12,8 +12,8 @@ using ecommerce_API.Data;
 namespace ecommerce_API.Migrations
 {
     [DbContext(typeof(ecommerce_APIContext))]
-    [Migration("20220813185837_AddUserImage")]
-    partial class AddUserImage
+    [Migration("20220819180922_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -31,6 +31,13 @@ namespace ecommerce_API.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("image")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("password")
                         .IsRequired()
@@ -200,7 +207,6 @@ namespace ecommerce_API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<byte[]>("image")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("password")

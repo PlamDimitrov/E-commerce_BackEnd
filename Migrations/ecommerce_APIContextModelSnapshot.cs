@@ -30,6 +30,10 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("image")
                         .HasColumnType("varbinary(max)");
 
@@ -201,7 +205,6 @@ namespace ecommerce_API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<byte[]>("image")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("password")

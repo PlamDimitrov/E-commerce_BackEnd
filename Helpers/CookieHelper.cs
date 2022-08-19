@@ -51,7 +51,7 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-        public static void CreateAdminCookie(HttpResponse response, Admin admin)
+        public static void CreateAdminCookie(HttpResponse response, UserForClientCookie admin)
         {
             response.Cookies.Append("admin-info", JsonSerializer.Serialize(admin), new CookieOptions()
             {
@@ -62,7 +62,7 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-        public static void CreateUserCookie(HttpResponse response, User user)
+        public static void CreateUserCookie(HttpResponse response, UserForClientCookie user)
         {
             response.Cookies.Append("user-info", JsonSerializer.Serialize(user), new CookieOptions()
             {

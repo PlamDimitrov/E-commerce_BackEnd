@@ -10,6 +10,22 @@ namespace ecommerce_API.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Admins",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    userName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Admins", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Brand",
                 columns: table => new
                 {
@@ -44,7 +60,7 @@ namespace ecommerce_API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ExpiredTokenValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ExpiredTime = table.Column<TimeSpan>(type: "time", nullable: false)
+                    ExpiredTime = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,8 +76,7 @@ namespace ecommerce_API.Migrations
                     userName = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     email = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    imageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    isAdmin = table.Column<bool>(type: "bit", nullable: false)
+                    image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -122,6 +137,12 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Admins_userName",
+                table: "Admins",
+                column: "userName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Brand_Name",
                 table: "Brand",
                 column: "Name",
@@ -164,6 +185,9 @@ namespace ecommerce_API.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Admins");
+
             migrationBuilder.DropTable(
                 name: "CategoryProduct");
 
