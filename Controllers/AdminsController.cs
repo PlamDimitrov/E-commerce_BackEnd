@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ecommerce_API;
 using ecommerce_API.Data;
 using ecommerce_API.Models;
 using ecommerce_API.Helpers;
@@ -31,6 +26,7 @@ namespace ecommerce_API.Controllers
 
         // GET: api/Admins
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Admin>>> GetAllAdmins()
         {
             if (_context.Admin == null)
@@ -49,6 +45,7 @@ namespace ecommerce_API.Controllers
 
         // GET: api/Admins/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<Admin>> GetAdmin(int id)
         {
             if (_context.Admin == null)
@@ -56,6 +53,7 @@ namespace ecommerce_API.Controllers
                 return NotFound();
             }
             var admin = await _context.Admin.FindAsync(id);
+            admin.password = "****";
 
             if (admin == null)
             {
@@ -68,6 +66,7 @@ namespace ecommerce_API.Controllers
         // PUT: api/Admins/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateAdmin(int id, Admin admin)
         {
             if (id != admin.Id)
@@ -98,6 +97,7 @@ namespace ecommerce_API.Controllers
 
         [HttpPost]
         [Route("register")]
+        [Authorize]
         public async Task<ActionResult<Admin>> RegisterAdmin(Admin admin)
         {
             var adminWithHashedPassword = admin;
@@ -144,15 +144,16 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<Admin>> LoginAdmin(UserLogin userLogin)
+
+        public async Task<ActionResult<Admin>> LoginAdmin(Admin userLogin)
         {
             bool verified = false;
             try
             {
-                Admin adminFromDataBase = await _context.Admin
+                Admin? adminFromDataBase = await _context.Admin
                     .Where(u => u.userName == userLogin.userName)
                     .FirstOrDefaultAsync();
-                
+
                 if (adminFromDataBase != null)
                 {
                     string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.password);
@@ -168,7 +169,7 @@ namespace ecommerce_API.Controllers
 
                     UserTokens token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateAdminCookie(Response, UserForClientCookie); 
+                    CookieHelper.CreateAdminCookie(Response, UserForClientCookie);
                     return Ok(adminFromDataBase);
                 }
                 else
@@ -181,7 +182,7 @@ namespace ecommerce_API.Controllers
             }
             catch (Exception)
             {
-                throw new Exception("Error: Somethin went wrong with the login!");
+                throw new Exception("Error: User was not found in the database!");
             }
         }
 
@@ -237,37 +238,44 @@ namespace ecommerce_API.Controllers
         {
             IFormFile file = Request.Form.Files[0];
             string? cookieValue = Request.Cookies["admin-info"];
-            Admin adminFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
-            try
+            if (cookieValue != null)
             {
-                Admin adminFromDataBase = await _context.Admin
-                        .Where(u => u.Id == adminFromCookie.Id)
-                        .FirstOrDefaultAsync();
-                if (adminFromDataBase == null)
+                Admin? adminFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
+                try
                 {
-                    return BadRequest();
-                }
-                else
-                {
-                    using (MemoryStream ms = new MemoryStream())
+                    Admin? adminFromDataBase = await _context.Admin
+                            .Where(u => u.Id == adminFromCookie.Id)
+                            .FirstOrDefaultAsync();
+                    if (adminFromDataBase == null)
                     {
-                        file.CopyTo(ms);
-                        byte[] fileBytes = ms.ToArray();
+                        return BadRequest();
+                    }
+                    else
+                    {
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            file.CopyTo(ms);
+                            byte[] fileBytes = ms.ToArray();
 
-                        adminFromDataBase.image = fileBytes;
-                        await _context.SaveChangesAsync();
-                        Admin adminFromDataBaseResponse = await _context.Admin
-                                .Where(u => u.Id == adminFromCookie.Id)
-                                .FirstOrDefaultAsync();
-                      /*  return Ok(adminFromDataBaseResponse); */
-                        return File(adminFromDataBaseResponse.image, "image/jpg");
-                    };
+                            adminFromDataBase.image = fileBytes;
+                            await _context.SaveChangesAsync();
+                            Admin? adminFromDataBaseResponse = await _context.Admin
+                                    .Where(u => u.Id == adminFromCookie.Id)
+                                    .FirstOrDefaultAsync();
+                            return Ok(adminFromDataBaseResponse);
+                        };
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Error: User not found!");
                 }
             }
-            catch (Exception)
+            else
             {
-                throw new Exception("Error: User not found!");
+                throw new Exception("Error: No cookie with Admin info was found!");
             }
+            
         }
         private bool AdminExists(int id)
         {

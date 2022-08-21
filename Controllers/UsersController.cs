@@ -7,7 +7,6 @@ using ecommerce_API.Entities;
 using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace ecommerce_API.Controllers
@@ -28,6 +27,7 @@ namespace ecommerce_API.Controllers
 
         // GET: api/Users
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<User>>> GetUser()
         {
             try
@@ -42,6 +42,7 @@ namespace ecommerce_API.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             try
@@ -96,6 +97,7 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("register")]
+        [Authorize]
         public async Task<ActionResult<User>> PostUser(User user)
         {
             var userWithHashedPassword = user;
@@ -140,7 +142,7 @@ namespace ecommerce_API.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<UserLogin>> LogInUser(UserLogin userLogin)
+        public async Task<ActionResult<User>> LogInUser(User userLogin)
         {
             bool verified = false;
             try
