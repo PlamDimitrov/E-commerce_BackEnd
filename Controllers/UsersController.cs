@@ -25,21 +25,6 @@ namespace ecommerce_API.Controllers
             _jwtSettings = jwtSettings;
         }
 
-        // GET: api/Users
-        [HttpGet]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser()
-        {
-            try
-            {
-                return await _context.User.ToListAsync();
-            }
-            catch (Exception)
-            {
-                throw new Exception("Error: Not possible to get all users!");
-            }
-        }
-
         // GET: api/Users/5
         [HttpGet("{id}")]
         [Authorize]
@@ -48,7 +33,7 @@ namespace ecommerce_API.Controllers
             try
             {
                 var user = await _context.User.FindAsync(id);
-
+                user.password = "****";
                 if (user == null)
                 {
                     return NotFound();

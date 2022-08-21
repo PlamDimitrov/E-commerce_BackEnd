@@ -52,15 +52,28 @@ namespace ecommerce_API.Controllers
             {
                 return NotFound();
             }
-            var admin = await _context.Admin.FindAsync(id);
-            admin.password = "****";
-
-            if (admin == null)
+            string cookieValue = Request.Cookies["admin-info"];
+            if (cookieValue == null)
             {
                 return NotFound();
             }
+            else
+            {
+                Admin userFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
+                var admin = await _context.Admin.FindAsync(id);
+                admin.password = "****";
+                return admin;
+                if (admin.userName != userFromCookie.userName)
+                {
+                    return NotFound();
+                }
+                if (admin == null)
+                {
+                    return NotFound();
+                }
 
-            return admin;
+            }
+
         }
 
         // PUT: api/Admins/5
@@ -275,7 +288,7 @@ namespace ecommerce_API.Controllers
             {
                 throw new Exception("Error: No cookie with Admin info was found!");
             }
-            
+
         }
         private bool AdminExists(int id)
         {
