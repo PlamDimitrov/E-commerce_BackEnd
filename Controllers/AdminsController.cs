@@ -144,7 +144,8 @@ namespace ecommerce_API.Controllers
                     .FirstOrDefaultAsync();
             if (adminFromDataBase != null && adminFromDataBase.userName == userName)
             {
-                return Ok(admin);
+                adminFromDataBase.password = "****";
+                return Ok(adminFromDataBase);
             }
             else
             {
@@ -175,14 +176,15 @@ namespace ecommerce_API.Controllers
                 }
                 if (adminFromDataBase != null && verified == true)
                 {
-                    UserForClientCookie UserForClientCookie = new UserForClientCookie();
-                    UserForClientCookie.Id = adminFromDataBase.Id;
-                    UserForClientCookie.userName = adminFromDataBase.userName;
-                    UserForClientCookie.email = adminFromDataBase.email;
+                    UserForClientCookie userForClientCookie = new UserForClientCookie();
+                    userForClientCookie.Id = adminFromDataBase.Id;
+                    userForClientCookie.userName = adminFromDataBase.userName;
+                    userForClientCookie.password = adminFromDataBase.password;
+                    userForClientCookie.email = adminFromDataBase.email;
 
                     UserTokens token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateAdminCookie(Response, UserForClientCookie);
+                    CookieHelper.CreateAdminCookie(Response, userForClientCookie);
                     return Ok(adminFromDataBase);
                 }
                 else
