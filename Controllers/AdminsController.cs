@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using ecommerce_API.Entities;
 using System.Text.Json;
+using System.Net;
 
 namespace ecommerce_API.Controllers
 {
@@ -172,7 +173,7 @@ namespace ecommerce_API.Controllers
                 {
                     string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.password);
                     verified = BCrypt.Net.BCrypt.Verify(userLogin.password, adminFromDataBase.password);
-                    adminFromDataBase.password = "*******";
+                    adminFromDataBase.password = "*****";
                 }
                 if (adminFromDataBase != null && verified == true)
                 {
@@ -189,7 +190,7 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    return Unauthorized();
+                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or password!" });
                     throw new Exception("Error: Wrong username or password!");
                 }
 

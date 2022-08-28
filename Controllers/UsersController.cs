@@ -8,6 +8,7 @@ using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 
 namespace ecommerce_API.Controllers
 
@@ -82,25 +83,52 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("register")]
-        [Authorize]
+
         public async Task<ActionResult<User>> PostUser(User user)
         {
             var userWithHashedPassword = user;
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.password);
-            userWithHashedPassword.password = passwordHash;
-            try
+            User checkUserName = await _context.User
+                .Where(u => u.userName == user.userName)
+                .FirstOrDefaultAsync();
+            User checkEmail = await _context.User
+                .Where(u => u.email == user.email)
+                .FirstOrDefaultAsync();
+            if (checkUserName != null)
             {
-                _context.User.Add(userWithHashedPassword);
-                await _context.SaveChangesAsync();
-                userWithHashedPassword.password = null;
-                return Ok(userWithHashedPassword);
-
+                return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Username already in use!" });
+                throw new Exception("Error: Username already in use!");
             }
-            catch (Exception)
+            else if (checkEmail != null)
             {
+                return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Email already in use!" });
+                throw new Exception("Error: Email already in use!");
+            }else
+            {
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.password);
+                userWithHashedPassword.password = passwordHash;
+                try
+                {
+                    _context.User.Add(userWithHashedPassword);
+                    await _context.SaveChangesAsync();
+                    userWithHashedPassword.password = null;
+                    return Ok(userWithHashedPassword);
 
-                throw new Exception("Error: User not created!");
+                }
+                catch (SqlException sqlEx)
+                {
+                    Console.WriteLine("SQL Exception: " + sqlEx);
+                    return BadRequest(sqlEx.Errors);
+                    // throw new Exception("Error: User not created!");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex);
+                    return BadRequest(ex.Data.Values);
+                    // throw new Exception("Error: User not created!");
+                }
             }
+
+            
 
         }
 
@@ -139,7 +167,7 @@ namespace ecommerce_API.Controllers
                 if (userFromDataBase != null)
                 {
                     verified = BCrypt.Net.BCrypt.Verify(userLogin.password, userFromDataBase.password);
-                    userFromDataBase.password = "*******";
+                    userFromDataBase.password = "*****";
                 }
                 if (userFromDataBase != null && verified == true)
                 {
@@ -156,7 +184,7 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    return Unauthorized();
+                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or password!" });
                     throw new Exception("Error: Wrong username or password!");
                 }
 
