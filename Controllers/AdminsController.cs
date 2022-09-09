@@ -111,7 +111,6 @@ namespace ecommerce_API.Controllers
 
         [HttpPost]
         [Route("register")]
-        [Authorize]
         public async Task<ActionResult<Admin>> RegisterAdmin(Admin admin)
         {
             var adminWithHashedPassword = admin;

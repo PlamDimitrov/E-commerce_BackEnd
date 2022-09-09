@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ecommerce_API.Migrations
 {
-    public partial class InitialMigration : Migration
+    public partial class InitialMigrations : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -68,6 +68,20 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Menu",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    address = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Menu", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -112,6 +126,26 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "subMenus",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MenuId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subMenus", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subMenus_Menu_MenuId",
+                        column: x => x.MenuId,
+                        principalTable: "Menu",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CategoryProduct",
                 columns: table => new
                 {
@@ -132,6 +166,27 @@ namespace ecommerce_API.Migrations
                         name: "FK_CategoryProduct_Product_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "subSubMenuLinks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubMenuId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subSubMenuLinks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subSubMenuLinks_subMenus_SubMenuId",
+                        column: x => x.SubMenuId,
+                        principalTable: "subMenus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -171,6 +226,16 @@ namespace ecommerce_API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_subMenus_MenuId",
+                table: "subMenus",
+                column: "MenuId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subSubMenuLinks_SubMenuId",
+                table: "subSubMenuLinks",
+                column: "SubMenuId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_email",
                 table: "Users",
                 column: "email",
@@ -195,6 +260,9 @@ namespace ecommerce_API.Migrations
                 name: "ExpiredTokens");
 
             migrationBuilder.DropTable(
+                name: "subSubMenuLinks");
+
+            migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
@@ -204,7 +272,13 @@ namespace ecommerce_API.Migrations
                 name: "Product");
 
             migrationBuilder.DropTable(
+                name: "subMenus");
+
+            migrationBuilder.DropTable(
                 name: "Brand");
+
+            migrationBuilder.DropTable(
+                name: "Menu");
         }
     }
 }

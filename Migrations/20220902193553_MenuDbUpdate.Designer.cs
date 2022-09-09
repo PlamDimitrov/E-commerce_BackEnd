@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ecommerce_API.Data;
 
@@ -11,9 +12,10 @@ using ecommerce_API.Data;
 namespace ecommerce_API.Migrations
 {
     [DbContext(typeof(ecommerce_APIContext))]
-    partial class ecommerce_APIContextModelSnapshot : ModelSnapshot
+    [Migration("20220902193553_MenuDbUpdate")]
+    partial class MenuDbUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,7 +149,7 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("MenuId")
+                    b.Property<int?>("MenuId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -158,7 +160,7 @@ namespace ecommerce_API.Migrations
 
                     b.HasIndex("MenuId");
 
-                    b.ToTable("subMenu");
+                    b.ToTable("subMenus");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
@@ -173,16 +175,16 @@ namespace ecommerce_API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SubMenuId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("subMenuId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("subMenuId");
+                    b.HasIndex("SubMenuId");
 
                     b.ToTable("Links");
                 });
@@ -318,22 +320,18 @@ namespace ecommerce_API.Migrations
                 {
                     b.HasOne("ecommerce_API.Entities.Menu", "Menu")
                         .WithMany("subMenus")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MenuId");
 
                     b.Navigation("Menu");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "subMenu")
+                    b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "SubMenu")
                         .WithMany("Links")
-                        .HasForeignKey("subMenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SubMenuId");
 
-                    b.Navigation("subMenu");
+                    b.Navigation("SubMenu");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>

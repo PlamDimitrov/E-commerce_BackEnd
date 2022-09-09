@@ -534,7 +534,6 @@ E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ecommerce-API.exe
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ecommerce-API.deps.json
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ecommerce-API.runtimeconfig.json
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ecommerce-API.dll
-E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ref\ecommerce-API.dll
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\ecommerce-API.pdb
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\BCrypt.Net-Next.dll
 E:\GitHub\PlamDimitrov\E-commerce_BackEnd\bin\Debug\net6.0\Humanizer.dll
@@ -1054,3 +1053,4 @@ C:\Personal\Projects\E-commerce_BackEnd\obj\Debug\net6.0\refint\ecommerce-API.dl
 C:\Personal\Projects\E-commerce_BackEnd\obj\Debug\net6.0\ecommerce-API.pdb
 C:\Personal\Projects\E-commerce_BackEnd\obj\Debug\net6.0\ecommerce-API.genruntimeconfig.cache
 C:\Personal\Projects\E-commerce_BackEnd\obj\Debug\net6.0\ref\ecommerce-API.dll
+E:\GitHub\PlamDimitrov\E-commerce_BackEnd\obj\Debug\net6.0\refint\ecommerce-API.dll

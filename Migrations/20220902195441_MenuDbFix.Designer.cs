@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ecommerce_API.Data;
 
@@ -11,9 +12,10 @@ using ecommerce_API.Data;
 namespace ecommerce_API.Migrations
 {
     [DbContext(typeof(ecommerce_APIContext))]
-    partial class ecommerce_APIContextModelSnapshot : ModelSnapshot
+    [Migration("20220902195441_MenuDbFix")]
+    partial class MenuDbFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,7 +149,7 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("MenuId")
+                    b.Property<int?>("MenuId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -177,7 +179,7 @@ namespace ecommerce_API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("subMenuId")
+                    b.Property<int?>("subMenuId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -318,9 +320,7 @@ namespace ecommerce_API.Migrations
                 {
                     b.HasOne("ecommerce_API.Entities.Menu", "Menu")
                         .WithMany("subMenus")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MenuId");
 
                     b.Navigation("Menu");
                 });
@@ -329,9 +329,7 @@ namespace ecommerce_API.Migrations
                 {
                     b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "subMenu")
                         .WithMany("Links")
-                        .HasForeignKey("subMenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("subMenuId");
 
                     b.Navigation("subMenu");
                 });
