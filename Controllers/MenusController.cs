@@ -5,6 +5,7 @@ using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
 using ecommerce_API.Entities.MainMenu;
+using System.Collections.Generic;
 
 namespace ecommerce_API.Controllers
 {
@@ -49,14 +50,80 @@ namespace ecommerce_API.Controllers
         // PUT: api/Menus/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("edit/{id}")]
-        public async Task<IActionResult> PutMenu(int id, Menu menu)
+        public async Task<IActionResult> PutMenu(Menu menu)
         {
-            if (id != menu.Id)
+
+            var checkLinkForDeletion = async (SubMenu subMenuClient) =>
             {
-                return BadRequest();
+                List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
+                                        .Where(l => l.subMenuId == subMenuClient.Id)
+                                        .ToListAsync();
+                ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
+                foreach (SubMenuLinks linkDb in subMenuLinksFromDb)
+                {
+                    var boolianFlagLink = false;
+                    foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
+                    {
+                        if (linkDb.Id == linkClient.Id)
+                        {
+                            boolianFlagLink = true;
+                        }
+                    }
+                    if (boolianFlagLink == false)
+                    {
+                        _context.Links.Remove(linkDb);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            };
+
+            var checkLinkForCreation = async (SubMenu subMenuClient) =>
+            {
+                List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
+                                        .Where(l => l.subMenuId == subMenuClient.Id)
+                                        .ToListAsync();
+                ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
+                foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
+                {
+                    var linkFromDb = await _context.Links
+                    .Where(l => l.Id == linkClient.Id)
+                    .FirstOrDefaultAsync();
+                    if (linkFromDb == null)
+                    {
+                        SubMenu subMenu = _context.subMenu.Where(s => s.Id == subMenuClient.Id).Include(l => l.Links).First(); ;
+                        subMenu.Links.Add(linkClient);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            };
+
+            List<SubMenu> sebMenusFromDb = await _context.subMenu
+                .Where(s => s.MenuId == menu.Id)
+                .ToListAsync();
+
+            List<SubMenu> subMenusToDelete = new List<SubMenu>();
+            ICollection<SubMenu> subMenusFromClient = menu.subMenus;
+
+            foreach (SubMenu subMenuDb in sebMenusFromDb)
+            {
+                var boolianFlag = false;
+                foreach (SubMenu subMenuClient in subMenusFromClient)
+                {
+                    if (subMenuDb.Id == subMenuClient.Id)
+                    {
+                        boolianFlag = true;
+                        await checkLinkForDeletion(subMenuClient);
+                        await checkLinkForCreation(subMenuClient);
+                    }
+                }
+                if (boolianFlag == false)
+                {
+                    _context.subMenu.Remove(subMenuDb);
+                    await _context.SaveChangesAsync();
+                }
             }
 
-            _context.Entry(menu).State = EntityState.Modified;
+            _context.Menu.Update(menu);
 
             try
             {
@@ -64,7 +131,7 @@ namespace ecommerce_API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MenuExists(id))
+                if (!MenuExists(menu.Id))
                 {
                     return NotFound();
                 }
@@ -81,12 +148,12 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("create")]
-        public async Task<ActionResult<Menu>> PostMenu( Menu menu )
+        public async Task<ActionResult<Menu>> PostMenu(Menu menu)
         {
             _context.Menu.Add(menu);
 
             await _context.SaveChangesAsync();
-            
+
 
 
             return CreatedAtAction("GetMenu", new { id = menu.Id }, menu);
