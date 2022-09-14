@@ -53,16 +53,12 @@ namespace ecommerce_API.Controllers
         public async Task<IActionResult> PutMenu(Menu menu)
         {
 
-            var checkLinkForDeletion = async (SubMenu subMenuClient) =>
+            var checkLinkForDeletion = async (ICollection<SubMenuLinks> linksClient, ICollection<SubMenuLinks> linksDb) =>
             {
-                List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
-                                        .Where(l => l.subMenuId == subMenuClient.Id)
-                                        .ToListAsync();
-                ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
-                foreach (SubMenuLinks linkDb in subMenuLinksFromDb)
+                foreach (SubMenuLinks linkDb in linksDb)
                 {
                     var boolianFlagLink = false;
-                    foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
+                    foreach (SubMenuLinks linkClient in linksClient)
                     {
                         if (linkDb.Id == linkClient.Id)
                         {
@@ -80,25 +76,51 @@ namespace ecommerce_API.Controllers
             var checkLinkForCreation = async (SubMenu subMenuClient) =>
             {
                 List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
+                                        .AsNoTracking()
                                         .Where(l => l.subMenuId == subMenuClient.Id)
                                         .ToListAsync();
                 ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
                 foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
                 {
                     var linkFromDb = await _context.Links
+                    .AsNoTracking()
                     .Where(l => l.Id == linkClient.Id)
                     .FirstOrDefaultAsync();
                     if (linkFromDb == null)
                     {
-                        SubMenu subMenu = _context.subMenu.Where(s => s.Id == subMenuClient.Id).Include(l => l.Links).First(); ;
+                        SubMenu subMenu = _context.subMenu
+                        .AsNoTracking()
+                        .Where(s => s.Id == subMenuClient.Id)
+                        .Include(l => l.Links)
+                        .First(); ;
                         subMenu.Links.Add(linkClient);
                         await _context.SaveChangesAsync();
                     }
                 }
             };
 
+            var checkSubMenuForCreation = async (Menu menuClient, SubMenu subMenuClient) =>
+            {
+                SubMenu menuExist = await _context.subMenu
+                .AsNoTracking()
+                .Where(s => s.Id == subMenuClient.Id)
+                .FirstOrDefaultAsync();
+                if (menuExist == null)
+                {
+                    Menu menuDb = _context.Menu
+                    .AsNoTracking()
+                    .Where(m => m.Id == menuClient.Id)
+                    .Include(l => l.subMenus)
+                    .First(); ;
+                    menuDb.subMenus.Add(subMenuClient);
+                    await _context.SaveChangesAsync();
+                }
+            };
+
             List<SubMenu> sebMenusFromDb = await _context.subMenu
+                .AsNoTracking()
                 .Where(s => s.MenuId == menu.Id)
+                .Include(s => s.Links)
                 .ToListAsync();
 
             List<SubMenu> subMenusToDelete = new List<SubMenu>();
@@ -112,8 +134,12 @@ namespace ecommerce_API.Controllers
                     if (subMenuDb.Id == subMenuClient.Id)
                     {
                         boolianFlag = true;
-                        await checkLinkForDeletion(subMenuClient);
+                        await checkLinkForDeletion(subMenuClient.Links, subMenuDb.Links);
                         await checkLinkForCreation(subMenuClient);
+                    }
+                    else
+                    {
+                        await checkSubMenuForCreation(menu,subMenuClient);
                     }
                 }
                 if (boolianFlag == false)
@@ -124,7 +150,6 @@ namespace ecommerce_API.Controllers
             }
 
             _context.Menu.Update(menu);
-
             try
             {
                 await _context.SaveChangesAsync();
@@ -140,6 +165,7 @@ namespace ecommerce_API.Controllers
                     throw;
                 }
             }
+
 
             return NoContent();
         }
