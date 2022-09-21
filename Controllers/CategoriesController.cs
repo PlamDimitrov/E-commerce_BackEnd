@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.Json;
 
 namespace ecommerce_API.Controllers
 {
@@ -105,6 +106,44 @@ namespace ecommerce_API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost]
+        [Route("uploadProfilePicture/{id}")]
+        [Authorize]
+        public async Task<ActionResult<byte[]>> UploadCategoryPicture(int id)
+        {
+            IFormFile file = Request.Form.Files[0];
+
+            try
+            {
+                Category categoryFromDataBase = await _context.Categories
+                        .Where(u => u.Id == id)
+                        .FirstOrDefaultAsync();
+                if (categoryFromDataBase == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        byte[] fileBytes = ms.ToArray();
+
+                        categoryFromDataBase.image = fileBytes;
+                        await _context.SaveChangesAsync();
+                        Category? categoryFromDataBaseResponse = await _context.Categories
+                                .Where(u => u.Id == id)
+                                .FirstOrDefaultAsync();
+                        return Ok(categoryFromDataBaseResponse);
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Category not found!");
+            }
         }
 
         private bool CategoryExists(int id)

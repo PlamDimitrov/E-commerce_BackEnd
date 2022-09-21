@@ -31,25 +31,10 @@ namespace ecommerce_API.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/Menus/5
-        [HttpPost]
-        [Route("getOne")]
-        public async Task<ActionResult<Menu>> GetMenu(Payload payload)
-        {
-            var Menu = await _context.Menu.FindAsync(payload.Id);
-            Console.WriteLine(payload.Id);
-
-            if (Menu == null)
-            {
-                return NotFound();
-            }
-
-            return Menu;
-        }
-
         // PUT: api/Menus/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("edit/{id}")]
+        [Authorize]
         public async Task<IActionResult> PutMenu(Menu menu)
         {
 
@@ -174,19 +159,21 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Route("create")]
+        [Authorize]
+
         public async Task<ActionResult<Menu>> PostMenu(Menu menu)
         {
             _context.Menu.Add(menu);
 
             await _context.SaveChangesAsync();
 
-
-
             return CreatedAtAction("GetMenu", new { id = menu.Id }, menu);
         }
 
         // DELETE: api/Menus/5
         [HttpDelete("delete")]
+        [Authorize]
+
         public async Task<IActionResult> DeleteMenu(Menu menu)
         {
             var MenuFromDatabase = await _context.Menu.FindAsync(menu.Id);

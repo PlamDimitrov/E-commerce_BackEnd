@@ -247,7 +247,7 @@ namespace ecommerce_API.Controllers
         }
 
         [HttpPost]
-        [Route("uploadProfilePicture")]
+        [Route("uploadProfilePicture/{id}")]
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadProfilePicture()
         {
