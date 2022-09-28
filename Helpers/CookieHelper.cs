@@ -55,7 +55,7 @@ namespace ecommerce_API.Helpers
         {
             response.Cookies.Append("admin-info", JsonSerializer.Serialize(admin), new CookieOptions()
             {
-                Expires = DateTimeOffset.Now.AddHours(24),
+                Expires = DateTimeOffset.Now.AddDays(1),
                 Path = "/",
                 SameSite = SameSiteMode.None,
                 HttpOnly = false,

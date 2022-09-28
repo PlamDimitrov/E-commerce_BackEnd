@@ -44,12 +44,12 @@ namespace ecommerce_API.Extensions
                     ValidAudience = bindJwtSettings.ValidAudience,
                     RequireExpirationTime = bindJwtSettings.RequireExpirationTime,
                     ValidateLifetime = bindJwtSettings.RequireExpirationTime,
-                    ClockSkew = TimeSpan.FromDays(2),
+                    ClockSkew = TimeSpan.Zero,
                 };
             })
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, o =>
             {
-                o.ExpireTimeSpan = TimeSpan.FromMinutes(30); // optional
+                o.ExpireTimeSpan = TimeSpan.FromSeconds(2); // optional
             });
         }
     }

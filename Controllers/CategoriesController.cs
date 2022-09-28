@@ -48,16 +48,15 @@ namespace ecommerce_API.Controllers
 
         // PUT: api/Categories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("edit/{id}")]
+        [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> PutCategory(int id, Category category)
         {
-            if (id != category.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(category).State = EntityState.Modified;
+            Category categoryFromDb = await _context.Categories
+                .Where(c => c.Id == id)
+                .FirstAsync();
+            categoryFromDb.Name = category.Name;
+            _context.Categories.Update(categoryFromDb);
 
             try
             {
@@ -75,7 +74,7 @@ namespace ecommerce_API.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(categoryFromDb);
         }
 
         // POST: api/Categories
@@ -113,37 +112,51 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadCategoryPicture(int id)
         {
-            IFormFile file = Request.Form.Files[0];
-
-            try
-            {
-                Category categoryFromDataBase = await _context.Categories
+            Category categoryFromDataBase = await _context.Categories
                         .Where(u => u.Id == id)
                         .FirstOrDefaultAsync();
-                if (categoryFromDataBase == null)
-                {
-                    return BadRequest();
-                }
-                else
-                {
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        file.CopyTo(ms);
-                        byte[] fileBytes = ms.ToArray();
-
-                        categoryFromDataBase.image = fileBytes;
-                        await _context.SaveChangesAsync();
-                        Category? categoryFromDataBaseResponse = await _context.Categories
-                                .Where(u => u.Id == id)
-                                .FirstOrDefaultAsync();
-                        return Ok(categoryFromDataBaseResponse);
-                    };
-                }
-            }
-            catch (Exception)
+            if (Request.Form.Files.Count == 0)
             {
-                throw new Exception("Error: Category not found!");
+                categoryFromDataBase.image = null;
+                await _context.SaveChangesAsync();
+                Category? categoryFromDataBaseResponse = await _context.Categories
+                        .Where(u => u.Id == id)
+                        .FirstOrDefaultAsync();
+                return Ok(categoryFromDataBaseResponse);
             }
+            else
+            {
+                IFormFile file = Request.Form.Files[0];
+
+                try
+                {
+
+                    if (categoryFromDataBase == null)
+                    {
+                        return BadRequest();
+                    }
+                    else
+                    {
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            file.CopyTo(ms);
+                            byte[] fileBytes = ms.ToArray();
+
+                            categoryFromDataBase.image = fileBytes;
+                            await _context.SaveChangesAsync();
+                            Category? categoryFromDataBaseResponse = await _context.Categories
+                                    .Where(u => u.Id == id)
+                                    .FirstOrDefaultAsync();
+                            return Ok(categoryFromDataBaseResponse);
+                        };
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Error: Category not found!");
+                }
+            }
+
         }
 
         private bool CategoryExists(int id)

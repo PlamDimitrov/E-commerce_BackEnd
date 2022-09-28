@@ -12,7 +12,6 @@ namespace ecommerce_API.Entities
         public int Id { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
-        [Required]
         public byte[]? image { get; set; } = null;
         public List<Product> Products { get; set; } = new List<Product>();
     }

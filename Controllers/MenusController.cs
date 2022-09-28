@@ -33,7 +33,7 @@ namespace ecommerce_API.Controllers
 
         // PUT: api/Menus/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("edit/{id}")]
+        [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> PutMenu(Menu menu)
         {

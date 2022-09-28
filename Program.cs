@@ -3,6 +3,9 @@ using ecommerce_API.Data;
 using ecommerce_API.Extensions;
 using ecommerce_API.Helpers;
 using ecommerce_API.JwtHelpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
@@ -44,9 +47,10 @@ app.UseCookiePolicy();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapControllers();
 
-PeriodicallyCaller.Call(43200000, JwtHelpers.CleanJwtObsoleteTokenFromDatabase);
+//PeriodicallyCaller.Call(43200000, JwtHelpers.CleanJwtObsoleteTokenFromDatabase);
 
 app.Run();

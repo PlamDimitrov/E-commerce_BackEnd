@@ -15,7 +15,6 @@ namespace ecommerce_API.JwtHelpers
                 new Claim("Id", userAccounts.Id.ToString()),
                     new Claim(ClaimTypes.Name, userAccounts.UserName),
                     new Claim(ClaimTypes.NameIdentifier, Id.ToString()),
-                    new Claim(ClaimTypes.Expiration, DateTime.UtcNow.AddDays(1).ToString("MMM ddd dd yyyy HH:mm:ss tt"))
             };
             return claims;
         }
@@ -32,7 +31,7 @@ namespace ecommerce_API.JwtHelpers
                 if (model == null) throw new ArgumentException(nameof(model));
                 var key = System.Text.Encoding.ASCII.GetBytes(jwtSettings.IssuerSigningKey);
                 Guid Id = Guid.Empty;
-                DateTime expireTime = DateTime.UtcNow.AddDays(1);
+                DateTime expireTime = DateTime.Now.AddDays(1);
                 UserToken.Validaty = expireTime.TimeOfDay;
                 var JWToken = new JwtSecurityToken(
                     issuer: jwtSettings.ValidIssuer,
@@ -61,7 +60,6 @@ namespace ecommerce_API.JwtHelpers
                 GuidId = Guid.NewGuid(),
                 UserName = userData.userName,
                 Id = userFromDataBase.Id,
-                ExpiredTime = DateTime.Now.AddDays(2)
             }, jwtSettings);
 
             return token;
@@ -74,7 +72,6 @@ namespace ecommerce_API.JwtHelpers
                 GuidId = Guid.NewGuid(),
                 UserName = adminData.userName,
                 Id = adminFromDataBase.Id,
-                ExpiredTime = DateTime.Now.AddDays(2)
             }, jwtSettings);
 
             return token;
