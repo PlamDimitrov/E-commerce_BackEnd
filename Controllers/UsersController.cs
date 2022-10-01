@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using ecommerce_API.Interfaces;
 
 namespace ecommerce_API.Controllers
 
@@ -34,7 +35,7 @@ namespace ecommerce_API.Controllers
             try
             {
                 var user = await _context.User.FindAsync(id);
-                user.password = "****";
+                user.Password = "****";
                 if (user == null)
                 {
                     return NotFound();
@@ -84,14 +85,14 @@ namespace ecommerce_API.Controllers
         [HttpPost]
         [Route("register")]
 
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<IUser>> PostUser(User user)
         {
-            var userWithHashedPassword = user;
-            User checkUserName = await _context.User
-                .Where(u => u.userName == user.userName)
+            User userWithHashedPassword = user;
+            IUser checkUserName = await _context.User
+                .Where(u => u.UserName == user.UserName)
                 .FirstOrDefaultAsync();
-            User checkEmail = await _context.User
-                .Where(u => u.email == user.email)
+            IUser checkEmail = await _context.User
+                .Where(u => u.Email == user.Email)
                 .FirstOrDefaultAsync();
             if (checkUserName != null)
             {
@@ -104,13 +105,13 @@ namespace ecommerce_API.Controllers
                 throw new Exception("Error: Email already in use!");
             }else
             {
-                string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.password);
-                userWithHashedPassword.password = passwordHash;
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                userWithHashedPassword.Password = passwordHash;
                 try
                 {
                     _context.User.Add(userWithHashedPassword);
                     await _context.SaveChangesAsync();
-                    userWithHashedPassword.password = null;
+                    userWithHashedPassword.Password = null;
                     return Ok(userWithHashedPassword);
 
                 }
@@ -136,16 +137,16 @@ namespace ecommerce_API.Controllers
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<User>> AuthorizeUser(User user)
+        public async Task<ActionResult<IUser>> AuthorizeUser(User user)
         {
-            var id = user.Id;
-            var userName = user.userName;
-            var userFromDataBase = await _context.User
+            int id = user.Id;
+            string userName = user.UserName;
+            IUser userFromDataBase = await _context.User
                     .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
-            if (userFromDataBase != null && userFromDataBase.userName == userName)
+            if (userFromDataBase != null && userFromDataBase.UserName == userName)
             {
-                userFromDataBase.password = "****";
+                userFromDataBase.Password = "****";
                 return Ok(userFromDataBase);
             }
             else
@@ -156,26 +157,26 @@ namespace ecommerce_API.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<User>> LogInUser(User userLogin)
+        public async Task<ActionResult<IUser>> LogInUser(User userLogin)
         {
             bool verified = false;
             try
             {
-                var userFromDataBase = await _context.User
-                    .Where(u => u.userName == userLogin.userName)
+                User userFromDataBase = await _context.User
+                    .Where(u => u.UserName == userLogin.UserName)
                     .FirstOrDefaultAsync();
                 if (userFromDataBase != null)
                 {
-                    verified = BCrypt.Net.BCrypt.Verify(userLogin.password, userFromDataBase.password);
-                    userFromDataBase.password = "*****";
+                    verified = BCrypt.Net.BCrypt.Verify(userLogin.Password, userFromDataBase.Password);
+                    userFromDataBase.Password = "*****";
                 }
                 if (userFromDataBase != null && verified == true)
                 {
                     UserForClientCookie userForClientCookie = new UserForClientCookie();
                     userForClientCookie.Id = userFromDataBase.Id;
-                    userForClientCookie.userName = userFromDataBase.userName;
-                    userForClientCookie.password = userFromDataBase.password;
-                    userForClientCookie.email = userFromDataBase.email;
+                    userForClientCookie.userName = userFromDataBase.UserName;
+                    userForClientCookie.password = userFromDataBase.Password;
+                    userForClientCookie.email = userFromDataBase.Email;
 
                     var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
@@ -184,15 +185,15 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or password!" });
-                    throw new Exception("Error: Wrong username or password!");
+                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or Password!" });
+                    throw new Exception("Error: Wrong username or Password!");
                 }
 
 
             }
             catch (Exception)
             {
-                throw new Exception("Error: Wrong username or password!");
+                throw new Exception("Error: Wrong username or Password!");
             }
 
         }
@@ -201,7 +202,7 @@ namespace ecommerce_API.Controllers
         [Route("logout")]
         public async Task<ActionResult> LogoutUser()
         {
-            var tokenValue = Request.Cookies["ecom-auth-token"];
+            string tokenValue = Request.Cookies["ecom-auth-token"];
             var handler = new JwtSecurityTokenHandler();
             var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
             var expiredToken = new ExpiredToken();
@@ -229,7 +230,7 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.User.FindAsync(id);
+            User user = await _context.User.FindAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -249,17 +250,16 @@ namespace ecommerce_API.Controllers
         }
 
         [HttpPost]
-        [Route("uploadProfilePicture")]
+        [Route("uploadProfilePicture/{id}")]
         [Authorize]
-        public async Task<ActionResult<byte[]>> UploadProfilePicture()
+        public async Task<ActionResult<byte[]>> UploadProfilePicture(int id)
         {
             IFormFile file = Request.Form.Files[0];
             string cookieValue = Request.Cookies["user-info"];
-            User userFromCookie = JsonSerializer.Deserialize<User>(cookieValue);
             try
             {
-                var userFromDataBase = await _context.User
-                        .Where(u => u.Id == userFromCookie.Id)
+                IUser userFromDataBase = await _context.User
+                        .Where(u => u.Id == id)
                         .FirstOrDefaultAsync();
                 if (userFromDataBase == null)
                 {
@@ -273,10 +273,10 @@ namespace ecommerce_API.Controllers
                         var fileBytes = ms.ToArray();
                         string s = Convert.ToBase64String(fileBytes);
 
-                        userFromDataBase.image = fileBytes;
+                        userFromDataBase.Image = fileBytes;
                         await _context.SaveChangesAsync();
-                        var userFromDataBaseSecond = await _context.User
-                                .Where(u => u.Id == userFromCookie.Id)
+                        IUser userFromDataBaseSecond = await _context.User
+                                .Where(u => u.Id == id)
                                 .FirstOrDefaultAsync();
                         return Ok(userFromDataBaseSecond);
                     };

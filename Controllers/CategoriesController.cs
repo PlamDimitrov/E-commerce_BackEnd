@@ -117,7 +117,7 @@ namespace ecommerce_API.Controllers
                         .FirstOrDefaultAsync();
             if (Request.Form.Files.Count == 0)
             {
-                categoryFromDataBase.image = null;
+                categoryFromDataBase.Image = null;
                 await _context.SaveChangesAsync();
                 Category? categoryFromDataBaseResponse = await _context.Categories
                         .Where(u => u.Id == id)
@@ -142,7 +142,7 @@ namespace ecommerce_API.Controllers
                             file.CopyTo(ms);
                             byte[] fileBytes = ms.ToArray();
 
-                            categoryFromDataBase.image = fileBytes;
+                            categoryFromDataBase.Image = fileBytes;
                             await _context.SaveChangesAsync();
                             Category? categoryFromDataBaseResponse = await _context.Categories
                                     .Where(u => u.Id == id)

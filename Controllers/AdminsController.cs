@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using ecommerce_API.Entities;
 using System.Text.Json;
-using System.Net;
-using NuGet.Common;
+using ecommerce_API.Interfaces;
+using Newtonsoft.Json;
 
 namespace ecommerce_API.Controllers
 {
@@ -29,7 +29,7 @@ namespace ecommerce_API.Controllers
         // GET: api/Admins
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Admin>>> GetAllAdmins()
+        public async Task<ActionResult<IEnumerable<IUser>>> GetAllAdmins()
         {
             if (_context.Admin == null)
             {
@@ -48,30 +48,28 @@ namespace ecommerce_API.Controllers
         // GET: api/Admins/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<Admin>> GetAdmin(int id)
+        public async Task<ActionResult<IUser>> GetAdmin(int id)
         {
             if (_context.Admin == null)
             {
                 return NotFound();
             }
-            string cookieValue = Request.Cookies["admin-info"];
+            var cookieValue = Request.Cookies["admin-info"];
             if (cookieValue == null)
             {
                 return NotFound();
             }
             else
             {
-                Admin userFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
                 var admin = await _context.Admin.FindAsync(id);
-                admin.password = "****";
-                return admin;
-                if (admin.userName != userFromCookie.userName)
-                {
-                    return NotFound();
-                }
                 if (admin == null)
                 {
                     return NotFound();
+                }
+                else
+                {
+                admin.Password = "****";
+                return admin;
                 }
 
             }
@@ -112,16 +110,16 @@ namespace ecommerce_API.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<ActionResult<Admin>> RegisterAdmin(Admin admin)
+        public async Task<ActionResult<IUser>> RegisterAdmin(Admin admin)
         {
-            var adminWithHashedPassword = admin;
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.password);
-            adminWithHashedPassword.password = passwordHash;
+            Admin adminWithHashedPassword = admin;
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.Password);
+            adminWithHashedPassword.Password = passwordHash;
             try
             {
                 _context.Admin.Add(adminWithHashedPassword);
                 await _context.SaveChangesAsync();
-                adminWithHashedPassword.password = "****";
+                adminWithHashedPassword.Password = "****";
                 return Ok(adminWithHashedPassword);
 
             }
@@ -136,16 +134,16 @@ namespace ecommerce_API.Controllers
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<Admin>> AuthorizeAdmin(Admin admin)
+        public async Task<ActionResult<IUser>> AuthorizeAdmin(Admin admin)
         {
-            var id = admin.Id;
-            var userName = admin.userName;
+            int id = admin.Id;
+            string userName = admin.UserName;
             var adminFromDataBase = await _context.Admin
                     .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
-            if (adminFromDataBase != null && adminFromDataBase.userName == userName)
+            if (adminFromDataBase != null && adminFromDataBase.UserName == userName)
             {
-                adminFromDataBase.password = "****";
+                adminFromDataBase.Password = "****";
                 return Ok(adminFromDataBase);
             }
             else
@@ -166,22 +164,22 @@ namespace ecommerce_API.Controllers
             try
             {
                 Admin? adminFromDataBase = await _context.Admin
-                    .Where(u => u.userName == userLogin.userName)
+                    .Where(u => u.UserName == userLogin.UserName)
                     .FirstOrDefaultAsync();
 
                 if (adminFromDataBase != null)
                 {
-                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.password);
-                    verified = BCrypt.Net.BCrypt.Verify(userLogin.password, adminFromDataBase.password);
-                    adminFromDataBase.password = "*****";
+                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.Password);
+                    verified = BCrypt.Net.BCrypt.Verify(userLogin.Password, adminFromDataBase.Password);
+                    adminFromDataBase.Password = "*****";
                 }
                 if (adminFromDataBase != null && verified == true)
                 {
                     UserForClientCookie userForClientCookie = new UserForClientCookie();
                     userForClientCookie.Id = adminFromDataBase.Id;
-                    userForClientCookie.userName = adminFromDataBase.userName;
-                    userForClientCookie.password = adminFromDataBase.password;
-                    userForClientCookie.email = adminFromDataBase.email;
+                    userForClientCookie.userName = adminFromDataBase.UserName;
+                    userForClientCookie.password = adminFromDataBase.Password;
+                    userForClientCookie.email = adminFromDataBase.Email;
 
                     UserTokens token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
                     CookieHelper.CreateTokenCookie(Response, token);
@@ -190,8 +188,8 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or password!" });
-                    throw new Exception("Error: Wrong username or password!");
+                    return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or Password!" });
+                    throw new Exception("Error: Wrong username or Password!");
                 }
 
 
@@ -250,17 +248,16 @@ namespace ecommerce_API.Controllers
         [HttpPost]
         [Route("uploadProfilePicture/{id}")]
         [Authorize]
-        public async Task<ActionResult<byte[]>> UploadProfilePicture()
+        public async Task<ActionResult<byte[]>> UploadProfilePicture(int id)
         {
             IFormFile file = Request.Form.Files[0];
             string? cookieValue = Request.Cookies["admin-info"];
             if (cookieValue != null)
             {
-                Admin? adminFromCookie = JsonSerializer.Deserialize<Admin>(cookieValue);
                 try
                 {
                     Admin? adminFromDataBase = await _context.Admin
-                            .Where(u => u.Id == adminFromCookie.Id)
+                            .Where(u => u.Id == id)
                             .FirstOrDefaultAsync();
                     if (adminFromDataBase == null)
                     {
@@ -273,10 +270,10 @@ namespace ecommerce_API.Controllers
                             file.CopyTo(ms);
                             byte[] fileBytes = ms.ToArray();
 
-                            adminFromDataBase.image = fileBytes;
+                            adminFromDataBase.Image = fileBytes;
                             await _context.SaveChangesAsync();
                             Admin? adminFromDataBaseResponse = await _context.Admin
-                                    .Where(u => u.Id == adminFromCookie.Id)
+                                    .Where(u => u.Id == id)
                                     .FirstOrDefaultAsync();
                             return Ok(adminFromDataBaseResponse);
                         };

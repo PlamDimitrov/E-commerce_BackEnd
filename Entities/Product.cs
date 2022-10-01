@@ -25,9 +25,9 @@ namespace ecommerce_API.Entities
         [Required]
         public bool Availability { get; set; } = false;
         [Required]
-        public bool featuredItem { get; set; } = false;
+        public bool FeaturedItem { get; set; } = false;
         [Required]
-        public bool recommended { get; set; } = false;
+        public bool Recommended { get; set; } = false;
 
         public int BrandId { get; set; }
         public Brand? Brand { get; set; }

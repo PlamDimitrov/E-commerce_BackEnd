@@ -35,11 +35,11 @@ namespace ecommerce_API.Data
                 .HasForeignKey(x => x.ProductId);
 
             builder.Entity<Menu>()
-                .HasMany(m => m.subMenus)
+                .HasMany(m => m.SubMenus)
                 .WithOne(s => s.Menu);
             builder.Entity<SubMenu>()
                 .HasMany(m => m.Links)
-                .WithOne(s => s.subMenu);
+                .WithOne(s => s.SubMenu);
         }
     }
 }

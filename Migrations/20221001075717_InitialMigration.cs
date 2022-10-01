@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ecommerce_API.Migrations
 {
-    public partial class InitialMigrations : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,10 +15,10 @@ namespace ecommerce_API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    userName = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
+                    UserName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -32,7 +32,7 @@ namespace ecommerce_API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -46,7 +46,7 @@ namespace ecommerce_API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -73,8 +73,8 @@ namespace ecommerce_API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    address = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -87,10 +87,10 @@ namespace ecommerce_API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    userName = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
+                    UserName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Image = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -110,8 +110,8 @@ namespace ecommerce_API.Migrations
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Condition = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Availability = table.Column<bool>(type: "bit", nullable: false),
-                    featuredItem = table.Column<bool>(type: "bit", nullable: false),
-                    recommended = table.Column<bool>(type: "bit", nullable: false),
+                    FeaturedItem = table.Column<bool>(type: "bit", nullable: false),
+                    Recommended = table.Column<bool>(type: "bit", nullable: false),
                     BrandId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -126,7 +126,7 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "subMenus",
+                name: "subMenu",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -136,9 +136,9 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subMenus", x => x.Id);
+                    table.PrimaryKey("PK_subMenu", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_subMenus_Menu_MenuId",
+                        name: "FK_subMenu_Menu_MenuId",
                         column: x => x.MenuId,
                         principalTable: "Menu",
                         principalColumn: "Id",
@@ -171,7 +171,7 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "subSubMenuLinks",
+                name: "Links",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -182,19 +182,19 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subSubMenuLinks", x => x.Id);
+                    table.PrimaryKey("PK_Links", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_subSubMenuLinks_subMenus_SubMenuId",
+                        name: "FK_Links_subMenu_SubMenuId",
                         column: x => x.SubMenuId,
-                        principalTable: "subMenus",
+                        principalTable: "subMenu",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Admins_userName",
+                name: "IX_Admins_UserName",
                 table: "Admins",
-                column: "userName",
+                column: "UserName",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -215,6 +215,11 @@ namespace ecommerce_API.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Links_SubMenuId",
+                table: "Links",
+                column: "SubMenuId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Product_BrandId",
                 table: "Product",
                 column: "BrandId");
@@ -226,25 +231,20 @@ namespace ecommerce_API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_subMenus_MenuId",
-                table: "subMenus",
+                name: "IX_subMenu_MenuId",
+                table: "subMenu",
                 column: "MenuId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_subSubMenuLinks_SubMenuId",
-                table: "subSubMenuLinks",
-                column: "SubMenuId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_email",
+                name: "IX_Users_Email",
                 table: "Users",
-                column: "email",
+                column: "Email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_userName",
+                name: "IX_Users_UserName",
                 table: "Users",
-                column: "userName",
+                column: "UserName",
                 unique: true);
         }
 
@@ -260,7 +260,7 @@ namespace ecommerce_API.Migrations
                 name: "ExpiredTokens");
 
             migrationBuilder.DropTable(
-                name: "subSubMenuLinks");
+                name: "Links");
 
             migrationBuilder.DropTable(
                 name: "Users");
@@ -272,7 +272,7 @@ namespace ecommerce_API.Migrations
                 name: "Product");
 
             migrationBuilder.DropTable(
-                name: "subMenus");
+                name: "subMenu");
 
             migrationBuilder.DropTable(
                 name: "Brand");

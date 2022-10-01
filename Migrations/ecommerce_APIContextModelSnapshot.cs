@@ -30,24 +30,24 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("email")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("image")
+                    b.Property<byte[]>("Image")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("password")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("userName")
+                    b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("userName")
+                    b.HasIndex("UserName")
                         .IsUnique();
 
                     b.ToTable("Admins");
@@ -61,12 +61,12 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<byte[]>("Image")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<byte[]>("image")
-                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 
@@ -84,12 +84,12 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<byte[]>("Image")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<byte[]>("image")
-                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 
@@ -171,16 +171,16 @@ namespace ecommerce_API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SubMenuId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("subMenuId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("subMenuId");
+                    b.HasIndex("SubMenuId");
 
                     b.ToTable("Links");
                 });
@@ -193,11 +193,11 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("address")
+                    b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("title")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -228,12 +228,18 @@ namespace ecommerce_API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("FeaturedItem")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Price")
                         .HasColumnType("float");
+
+                    b.Property<bool>("Recommended")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -242,12 +248,6 @@ namespace ecommerce_API.Migrations
                     b.Property<string>("WebId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("featuredItem")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("recommended")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -267,27 +267,27 @@ namespace ecommerce_API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("email")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<byte[]>("image")
+                    b.Property<byte[]>("Image")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("password")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("userName")
+                    b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("email")
+                    b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("userName")
+                    b.HasIndex("UserName")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -315,7 +315,7 @@ namespace ecommerce_API.Migrations
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenu", b =>
                 {
                     b.HasOne("ecommerce_API.Entities.Menu", "Menu")
-                        .WithMany("subMenus")
+                        .WithMany("SubMenus")
                         .HasForeignKey("MenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -325,13 +325,13 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "subMenu")
+                    b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "SubMenu")
                         .WithMany("Links")
-                        .HasForeignKey("subMenuId")
+                        .HasForeignKey("SubMenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("subMenu");
+                    b.Navigation("SubMenu");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>
@@ -362,7 +362,7 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.Menu", b =>
                 {
-                    b.Navigation("subMenus");
+                    b.Navigation("SubMenus");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>

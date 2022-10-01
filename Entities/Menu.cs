@@ -7,9 +7,9 @@ namespace ecommerce_API.Entities
     {
         public int Id { get; set; }
         [Required]
-        public string title { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         [Required]
-        public string address { get; set; } = string.Empty ;
-        public ICollection<SubMenu> subMenus { get; set; } = new List<SubMenu>();
+        public string Address { get; set; } = string.Empty ;
+        public ICollection<SubMenu> SubMenus { get; set; } = new List<SubMenu>();
     }
 }

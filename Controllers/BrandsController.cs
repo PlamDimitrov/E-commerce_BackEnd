@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
+using ecommerce_API.Services;
 
 namespace ecommerce_API.Controllers
 {
@@ -17,10 +18,12 @@ namespace ecommerce_API.Controllers
     public class BrandsController : ControllerBase
     {
         private readonly ecommerce_APIContext _context;
+        private readonly PictureService _pictureService;
 
         public BrandsController(ecommerce_APIContext context)
         {
             _context = context;
+            _pictureService = new PictureService(context);
         }
 
         // GET: api/Brands
@@ -117,43 +120,27 @@ namespace ecommerce_API.Controllers
                         .FirstOrDefaultAsync();
             if (Request.Form.Files.Count == 0)
             {
-                brandFromDataBase.image = null;
-                await _context.SaveChangesAsync();
-                Brand? brandFromDataBaseResponse = await _context.Brand
-                        .Where(u => u.Id == id)
-                        .FirstOrDefaultAsync();
-                return Ok(brandFromDataBaseResponse);
+                var updatedBrand = await _pictureService.RemoveFromBrand(id);
+                if (updatedBrand == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    return Ok(updatedBrand);
+                }
             }
             else
             {
                 IFormFile file = Request.Form.Files[0];
-
-                try
+                var updatedBrand = await _pictureService.AddToBrand(id, file);
+                if (updatedBrand == null)
                 {
-
-                    if (brandFromDataBase == null)
-                    {
-                        return BadRequest();
-                    }
-                    else
-                    {
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            file.CopyTo(ms);
-                            byte[] fileBytes = ms.ToArray();
-
-                            brandFromDataBase.image = fileBytes;
-                            await _context.SaveChangesAsync();
-                            Brand? brandFromDataBaseResponse = await _context.Brand
-                                    .Where(u => u.Id == id)
-                                    .FirstOrDefaultAsync();
-                            return Ok(brandFromDataBaseResponse);
-                        };
-                    }
+                    return BadRequest();
                 }
-                catch (Exception)
+                else
                 {
-                    throw new Exception("Error: Category not found!");
+                    return Ok(updatedBrand);
                 }
             }
 

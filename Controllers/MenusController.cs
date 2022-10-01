@@ -26,7 +26,7 @@ namespace ecommerce_API.Controllers
         public async Task<ActionResult<IEnumerable<Menu>>> GetMenu()
         {
             return await _context.Menu
-                .Include(m => m.subMenus)
+                .Include(m => m.SubMenus)
                 .ThenInclude(s => s.Links)
                 .ToListAsync();
         }
@@ -62,7 +62,7 @@ namespace ecommerce_API.Controllers
             {
                 List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
                                         .AsNoTracking()
-                                        .Where(l => l.subMenuId == subMenuClient.Id)
+                                        .Where(l => l.SubMenuId == subMenuClient.Id)
                                         .ToListAsync();
                 ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
                 foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
@@ -95,9 +95,9 @@ namespace ecommerce_API.Controllers
                     Menu menuDb = _context.Menu
                     .AsNoTracking()
                     .Where(m => m.Id == menuClient.Id)
-                    .Include(l => l.subMenus)
+                    .Include(l => l.SubMenus)
                     .First(); ;
-                    menuDb.subMenus.Add(subMenuClient);
+                    menuDb.SubMenus.Add(subMenuClient);
                     await _context.SaveChangesAsync();
                 }
             };
@@ -109,7 +109,7 @@ namespace ecommerce_API.Controllers
                 .ToListAsync();
 
             List<SubMenu> subMenusToDelete = new List<SubMenu>();
-            ICollection<SubMenu> subMenusFromClient = menu.subMenus;
+            ICollection<SubMenu> subMenusFromClient = menu.SubMenus;
 
             foreach (SubMenu subMenuDb in sebMenusFromDb)
             {

@@ -58,7 +58,7 @@ namespace ecommerce_API.JwtHelpers
             var token = GenTokenkey(new UserTokens()
             {
                 GuidId = Guid.NewGuid(),
-                UserName = userData.userName,
+                UserName = userData.UserName,
                 Id = userFromDataBase.Id,
             }, jwtSettings);
 
@@ -70,7 +70,7 @@ namespace ecommerce_API.JwtHelpers
             var token = GenTokenkey(new UserTokens()
             {
                 GuidId = Guid.NewGuid(),
-                UserName = adminData.userName,
+                UserName = adminData.UserName,
                 Id = adminFromDataBase.Id,
             }, jwtSettings);
 
