@@ -11,15 +11,15 @@ namespace ecommerce_API.Data
             : base(options)
         {
         }
-        public DbSet<Admin> Admin { get; set; }
-        public DbSet<User> User { get; set; }
+        public DbSet<Admin> Admins { get; set; }
+        public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Brand> Brand { get; set; }
+        public DbSet<Brand> Brands { get; set; }
         public DbSet<ExpiredToken> ExpiredTokens { get; set; }
-        public DbSet<Menu> Menu { get; set; }
-        public DbSet<SubMenu> subMenu { get; set; }
-        public DbSet<SubMenuLinks> Links { get; set; }
+        public DbSet<Menu> Menus { get; set; }
+        public DbSet<SubMenu> SubMenu { get; set; }
+        public DbSet<SubMenuLinks> SubMenuLinks { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

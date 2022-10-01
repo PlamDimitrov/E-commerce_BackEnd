@@ -10,6 +10,7 @@ using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
+using ecommerce_API.Services;
 
 namespace ecommerce_API.Controllers
 {
@@ -18,10 +19,12 @@ namespace ecommerce_API.Controllers
     public class CategoriesController : ControllerBase
     {
         private readonly ecommerce_APIContext _context;
+        private readonly ImageService _imageService;
 
         public CategoriesController(ecommerce_APIContext context)
         {
             _context = context;
+            _imageService = new ImageService(context);
         }
 
         // GET: api/Categories
@@ -112,51 +115,31 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadCategoryPicture(int id)
         {
-            Category categoryFromDataBase = await _context.Categories
-                        .Where(u => u.Id == id)
-                        .FirstOrDefaultAsync();
             if (Request.Form.Files.Count == 0)
             {
-                categoryFromDataBase.Image = null;
-                await _context.SaveChangesAsync();
-                Category? categoryFromDataBaseResponse = await _context.Categories
-                        .Where(u => u.Id == id)
-                        .FirstOrDefaultAsync();
-                return Ok(categoryFromDataBaseResponse);
+                var updatedCategory = await _imageService.RemoveFromCategory(id);
+                if (updatedCategory == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    return Ok(updatedCategory);
+                }
             }
             else
             {
                 IFormFile file = Request.Form.Files[0];
-
-                try
+                var updatedCategory = await _imageService.AddToBrand(id, file);
+                if (updatedCategory == null)
                 {
-
-                    if (categoryFromDataBase == null)
-                    {
-                        return BadRequest();
-                    }
-                    else
-                    {
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            file.CopyTo(ms);
-                            byte[] fileBytes = ms.ToArray();
-
-                            categoryFromDataBase.Image = fileBytes;
-                            await _context.SaveChangesAsync();
-                            Category? categoryFromDataBaseResponse = await _context.Categories
-                                    .Where(u => u.Id == id)
-                                    .FirstOrDefaultAsync();
-                            return Ok(categoryFromDataBaseResponse);
-                        };
-                    }
+                    return BadRequest();
                 }
-                catch (Exception)
+                else
                 {
-                    throw new Exception("Error: Category not found!");
+                    return Ok(updatedCategory);
                 }
             }
-
         }
 
         private bool CategoryExists(int id)

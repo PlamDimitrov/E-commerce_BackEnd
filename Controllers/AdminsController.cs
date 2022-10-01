@@ -10,6 +10,7 @@ using ecommerce_API.Entities;
 using System.Text.Json;
 using ecommerce_API.Interfaces;
 using Newtonsoft.Json;
+using ecommerce_API.Services;
 
 namespace ecommerce_API.Controllers
 {
@@ -19,11 +20,13 @@ namespace ecommerce_API.Controllers
     {
         private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
+        private readonly ImageService _imageService;
 
         public AdminsController(ecommerce_APIContext context, JwtSettings jwtSettings)
         {
             _context = context;
             _jwtSettings = jwtSettings;
+            _imageService = new ImageService(context);
         }
 
         // GET: api/Admins
@@ -31,13 +34,13 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<IUser>>> GetAllAdmins()
         {
-            if (_context.Admin == null)
+            if (_context.Admins == null)
             {
                 return NotFound();
             }
             try
             {
-                return await _context.Admin.ToListAsync();
+                return await _context.Admins.ToListAsync();
             }
             catch (Exception)
             {
@@ -50,7 +53,7 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<IUser>> GetAdmin(int id)
         {
-            if (_context.Admin == null)
+            if (_context.Admins == null)
             {
                 return NotFound();
             }
@@ -61,15 +64,15 @@ namespace ecommerce_API.Controllers
             }
             else
             {
-                var admin = await _context.Admin.FindAsync(id);
+                var admin = await _context.Admins.FindAsync(id);
                 if (admin == null)
                 {
                     return NotFound();
                 }
                 else
                 {
-                admin.Password = "****";
-                return admin;
+                    admin.Password = "****";
+                    return admin;
                 }
 
             }
@@ -117,7 +120,7 @@ namespace ecommerce_API.Controllers
             adminWithHashedPassword.Password = passwordHash;
             try
             {
-                _context.Admin.Add(adminWithHashedPassword);
+                _context.Admins.Add(adminWithHashedPassword);
                 await _context.SaveChangesAsync();
                 adminWithHashedPassword.Password = "****";
                 return Ok(adminWithHashedPassword);
@@ -126,7 +129,7 @@ namespace ecommerce_API.Controllers
             catch (Exception)
             {
 
-                throw new Exception("Error: Admin not created!");
+                throw new Exception("Error: Admins not created!");
             }
 
         }
@@ -138,7 +141,7 @@ namespace ecommerce_API.Controllers
         {
             int id = admin.Id;
             string userName = admin.UserName;
-            var adminFromDataBase = await _context.Admin
+            var adminFromDataBase = await _context.Admins
                     .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
             if (adminFromDataBase != null && adminFromDataBase.UserName == userName)
@@ -163,7 +166,7 @@ namespace ecommerce_API.Controllers
             bool verified = false;
             try
             {
-                Admin? adminFromDataBase = await _context.Admin
+                Admin? adminFromDataBase = await _context.Admins
                     .Where(u => u.UserName == userLogin.UserName)
                     .FirstOrDefaultAsync();
 
@@ -196,7 +199,7 @@ namespace ecommerce_API.Controllers
             }
             catch (Exception)
             {
-                throw new Exception("Error: User was not found in the database!");
+                throw new Exception("Error: Users was not found in the database!");
             }
         }
 
@@ -229,17 +232,17 @@ namespace ecommerce_API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdmin(int id)
         {
-            if (_context.Admin == null)
+            if (_context.Admins == null)
             {
                 return NotFound();
             }
-            var admin = await _context.Admin.FindAsync(id);
+            var admin = await _context.Admins.FindAsync(id);
             if (admin == null)
             {
                 return NotFound();
             }
 
-            _context.Admin.Remove(admin);
+            _context.Admins.Remove(admin);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -250,49 +253,36 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadProfilePicture(int id)
         {
-            IFormFile file = Request.Form.Files[0];
-            string? cookieValue = Request.Cookies["admin-info"];
-            if (cookieValue != null)
+            if (Request.Form.Files.Count == 0)
             {
-                try
+                var updatedAdmin = await _imageService.RemoveFromAdmin(id);
+                if (updatedAdmin == null)
                 {
-                    Admin? adminFromDataBase = await _context.Admin
-                            .Where(u => u.Id == id)
-                            .FirstOrDefaultAsync();
-                    if (adminFromDataBase == null)
-                    {
-                        return BadRequest();
-                    }
-                    else
-                    {
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            file.CopyTo(ms);
-                            byte[] fileBytes = ms.ToArray();
-
-                            adminFromDataBase.Image = fileBytes;
-                            await _context.SaveChangesAsync();
-                            Admin? adminFromDataBaseResponse = await _context.Admin
-                                    .Where(u => u.Id == id)
-                                    .FirstOrDefaultAsync();
-                            return Ok(adminFromDataBaseResponse);
-                        };
-                    }
+                    return BadRequest();
                 }
-                catch (Exception)
+                else
                 {
-                    throw new Exception("Error: User not found!");
+                    return Ok(updatedAdmin);
                 }
             }
             else
             {
-                throw new Exception("Error: No cookie with Admin info was found!");
+                IFormFile file = Request.Form.Files[0];
+                var updatedAdmin = await _imageService.AddToAdmin(id, file);
+                if (updatedAdmin == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    return Ok(updatedAdmin);
+                }
             }
-
         }
+
         private bool AdminExists(int id)
         {
-            return (_context.Admin?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Admins?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

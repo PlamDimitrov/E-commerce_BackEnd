@@ -24,7 +24,7 @@ namespace ecommerce_API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("ecommerce_API.Admin", b =>
+            modelBuilder.Entity("ecommerce_API.Admins", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -55,7 +55,7 @@ namespace ecommerce_API.Migrations
                     b.ToTable("Admins");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Brand", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Brands", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -75,7 +75,7 @@ namespace ecommerce_API.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Brand");
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.Category", b =>
@@ -158,7 +158,7 @@ namespace ecommerce_API.Migrations
 
                     b.HasIndex("MenuId");
 
-                    b.ToTable("subMenu");
+                    b.ToTable("SubMenu");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
@@ -184,10 +184,10 @@ namespace ecommerce_API.Migrations
 
                     b.HasIndex("SubMenuId");
 
-                    b.ToTable("Links");
+                    b.ToTable("SubMenuLinks");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Menu", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Menus", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -205,7 +205,7 @@ namespace ecommerce_API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Menu");
+                    b.ToTable("Menus");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>
@@ -261,7 +261,7 @@ namespace ecommerce_API.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("ecommerce_API.User", b =>
+            modelBuilder.Entity("ecommerce_API.Users", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -316,19 +316,19 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenu", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.Menu", "Menu")
+                    b.HasOne("ecommerce_API.Entities.Menus", "Menus")
                         .WithMany("SubMenus")
                         .HasForeignKey("MenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Menu");
+                    b.Navigation("Menus");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
                 {
                     b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "SubMenu")
-                        .WithMany("Links")
+                        .WithMany("SubMenuLinks")
                         .HasForeignKey("SubMenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -338,16 +338,16 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.Brand", "Brand")
+                    b.HasOne("ecommerce_API.Entities.Brands", "Brands")
                         .WithMany("Products")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Brand");
+                    b.Navigation("Brands");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Brand", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Brands", b =>
                 {
                     b.Navigation("Products");
                 });
@@ -359,10 +359,10 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenu", b =>
                 {
-                    b.Navigation("Links");
+                    b.Navigation("SubMenuLinks");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Menu", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Menus", b =>
                 {
                     b.Navigation("SubMenus");
                 });

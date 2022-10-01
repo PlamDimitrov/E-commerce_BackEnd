@@ -18,12 +18,12 @@ namespace ecommerce_API.Controllers
     public class BrandsController : ControllerBase
     {
         private readonly ecommerce_APIContext _context;
-        private readonly PictureService _pictureService;
+        private readonly ImageService _imageService;
 
         public BrandsController(ecommerce_APIContext context)
         {
             _context = context;
-            _pictureService = new PictureService(context);
+            _imageService = new ImageService(context);
         }
 
         // GET: api/Brands
@@ -31,7 +31,7 @@ namespace ecommerce_API.Controllers
         [Route("getAll")]
         public async Task<ActionResult<IEnumerable<Brand>>> GetBrand()
         {
-            return await _context.Brand.ToListAsync();
+            return await _context.Brands.ToListAsync();
         }
 
         // GET: api/Brands/5
@@ -39,7 +39,7 @@ namespace ecommerce_API.Controllers
         [Route("getOne/{id}")]
         public async Task<ActionResult<Brand>> GetBrand(int id)
         {
-            var brand = await _context.Brand.FindAsync(id);
+            var brand = await _context.Brands.FindAsync(id);
 
             if (brand == null)
             {
@@ -55,11 +55,11 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> PutBrand(int id, Brand brand)
         {
-            Brand brandFromDb = await _context.Brand
+            Brand brandFromDb = await _context.Brands
                 .Where(c => c.Id == id)
                 .FirstAsync();
             brandFromDb.Name = brand.Name;
-            _context.Brand.Update(brandFromDb);
+            _context.Brands.Update(brandFromDb);
 
             try
             {
@@ -87,7 +87,7 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Brand>> PostBrand(Brand brand)
         {
-            _context.Brand.Add(brand);
+            _context.Brands.Add(brand);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetBrand", new { id = brand.Id }, brand);
@@ -98,13 +98,13 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteBrand(int id)
         {
-            var brand = await _context.Brand.FindAsync(id);
+            var brand = await _context.Brands.FindAsync(id);
             if (brand == null)
             {
                 return NotFound();
             }
 
-            _context.Brand.Remove(brand);
+            _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -115,12 +115,9 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadBrandPicture(int id)
         {
-            Brand brandFromDataBase = await _context.Brand
-                        .Where(u => u.Id == id)
-                        .FirstOrDefaultAsync();
             if (Request.Form.Files.Count == 0)
             {
-                var updatedBrand = await _pictureService.RemoveFromBrand(id);
+                var updatedBrand = await _imageService.RemoveFromBrand(id);
                 if (updatedBrand == null)
                 {
                     return BadRequest();
@@ -133,7 +130,7 @@ namespace ecommerce_API.Controllers
             else
             {
                 IFormFile file = Request.Form.Files[0];
-                var updatedBrand = await _pictureService.AddToBrand(id, file);
+                var updatedBrand = await _imageService.AddToBrand(id, file);
                 if (updatedBrand == null)
                 {
                     return BadRequest();
@@ -143,13 +140,11 @@ namespace ecommerce_API.Controllers
                     return Ok(updatedBrand);
                 }
             }
-
         }
-
 
         private bool BrandExists(int id)
         {
-            return _context.Brand.Any(e => e.Id == id);
+            return _context.Brands.Any(e => e.Id == id);
         }
     }
 }

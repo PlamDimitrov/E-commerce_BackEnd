@@ -26,7 +26,7 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Brand",
+                name: "Brands",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -68,7 +68,7 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Menu",
+                name: "Menus",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -120,13 +120,13 @@ namespace ecommerce_API.Migrations
                     table.ForeignKey(
                         name: "FK_Product_Brand_BrandId",
                         column: x => x.BrandId,
-                        principalTable: "Brand",
+                        principalTable: "Brands",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "subMenu",
+                name: "SubMenu",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -140,7 +140,7 @@ namespace ecommerce_API.Migrations
                     table.ForeignKey(
                         name: "FK_subMenu_Menu_MenuId",
                         column: x => x.MenuId,
-                        principalTable: "Menu",
+                        principalTable: "Menus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -171,7 +171,7 @@ namespace ecommerce_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Links",
+                name: "SubMenuLinks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -186,7 +186,7 @@ namespace ecommerce_API.Migrations
                     table.ForeignKey(
                         name: "FK_Links_subMenu_SubMenuId",
                         column: x => x.SubMenuId,
-                        principalTable: "subMenu",
+                        principalTable: "SubMenu",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -199,7 +199,7 @@ namespace ecommerce_API.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Brand_Name",
-                table: "Brand",
+                table: "Brands",
                 column: "Name",
                 unique: true);
 
@@ -216,7 +216,7 @@ namespace ecommerce_API.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Links_SubMenuId",
-                table: "Links",
+                table: "SubMenuLinks",
                 column: "SubMenuId");
 
             migrationBuilder.CreateIndex(
@@ -232,7 +232,7 @@ namespace ecommerce_API.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_subMenu_MenuId",
-                table: "subMenu",
+                table: "SubMenu",
                 column: "MenuId");
 
             migrationBuilder.CreateIndex(
@@ -260,7 +260,7 @@ namespace ecommerce_API.Migrations
                 name: "ExpiredTokens");
 
             migrationBuilder.DropTable(
-                name: "Links");
+                name: "SubMenuLinks");
 
             migrationBuilder.DropTable(
                 name: "Users");
@@ -272,13 +272,13 @@ namespace ecommerce_API.Migrations
                 name: "Product");
 
             migrationBuilder.DropTable(
-                name: "subMenu");
+                name: "SubMenu");
 
             migrationBuilder.DropTable(
-                name: "Brand");
+                name: "Brands");
 
             migrationBuilder.DropTable(
-                name: "Menu");
+                name: "Menus");
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace ecommerce_API.Entities
 {
-    [Table("Brand")]
+    [Table("Brands")]
     [Index("Name", IsUnique = true)]
     public class Brand
     {

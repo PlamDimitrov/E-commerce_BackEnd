@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using ecommerce_API.Interfaces;
+using ecommerce_API.Services;
 
 namespace ecommerce_API.Controllers
 
@@ -20,11 +21,13 @@ namespace ecommerce_API.Controllers
     {
         private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
+        private readonly ImageService _imageService;
 
         public UsersController(ecommerce_APIContext context, JwtSettings jwtSettings)
         {
             _context = context;
             _jwtSettings = jwtSettings;
+            _imageService = new ImageService(context);
         }
 
         // GET: api/Users/5
@@ -34,7 +37,7 @@ namespace ecommerce_API.Controllers
         {
             try
             {
-                var user = await _context.User.FindAsync(id);
+                var user = await _context.Users.FindAsync(id);
                 user.Password = "****";
                 if (user == null)
                 {
@@ -73,7 +76,7 @@ namespace ecommerce_API.Controllers
                 }
                 else
                 {
-                    throw new Exception("Error: User not eddited!");
+                    throw new Exception("Error: Users not eddited!");
                 }
             }
 
@@ -88,10 +91,10 @@ namespace ecommerce_API.Controllers
         public async Task<ActionResult<IUser>> PostUser(User user)
         {
             User userWithHashedPassword = user;
-            IUser checkUserName = await _context.User
+            IUser checkUserName = await _context.Users
                 .Where(u => u.UserName == user.UserName)
                 .FirstOrDefaultAsync();
-            IUser checkEmail = await _context.User
+            IUser checkEmail = await _context.Users
                 .Where(u => u.Email == user.Email)
                 .FirstOrDefaultAsync();
             if (checkUserName != null)
@@ -109,7 +112,7 @@ namespace ecommerce_API.Controllers
                 userWithHashedPassword.Password = passwordHash;
                 try
                 {
-                    _context.User.Add(userWithHashedPassword);
+                    _context.Users.Add(userWithHashedPassword);
                     await _context.SaveChangesAsync();
                     userWithHashedPassword.Password = null;
                     return Ok(userWithHashedPassword);
@@ -119,13 +122,13 @@ namespace ecommerce_API.Controllers
                 {
                     Console.WriteLine("SQL Exception: " + sqlEx);
                     return BadRequest(sqlEx.Errors);
-                    // throw new Exception("Error: User not created!");
+                    // throw new Exception("Error: Users not created!");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Exception: " + ex);
                     return BadRequest(ex.Data.Values);
-                    // throw new Exception("Error: User not created!");
+                    // throw new Exception("Error: Users not created!");
                 }
             }
 
@@ -141,7 +144,7 @@ namespace ecommerce_API.Controllers
         {
             int id = user.Id;
             string userName = user.UserName;
-            IUser userFromDataBase = await _context.User
+            IUser userFromDataBase = await _context.Users
                     .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
             if (userFromDataBase != null && userFromDataBase.UserName == userName)
@@ -162,7 +165,7 @@ namespace ecommerce_API.Controllers
             bool verified = false;
             try
             {
-                User userFromDataBase = await _context.User
+                User userFromDataBase = await _context.Users
                     .Where(u => u.UserName == userLogin.UserName)
                     .FirstOrDefaultAsync();
                 if (userFromDataBase != null)
@@ -230,14 +233,14 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            User user = await _context.User.FindAsync(id);
+            User user = await _context.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound();
             }
             try
             {
-                _context.User.Remove(user);
+                _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
 
                 return NoContent();
@@ -245,7 +248,7 @@ namespace ecommerce_API.Controllers
             catch (Exception)
             {
 
-                throw new Exception("Error: User not deleted!");
+                throw new Exception("Error: Users not deleted!");
             }
         }
 
@@ -254,43 +257,36 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<byte[]>> UploadProfilePicture(int id)
         {
-            IFormFile file = Request.Form.Files[0];
-            string cookieValue = Request.Cookies["user-info"];
-            try
+            if (Request.Form.Files.Count == 0)
             {
-                IUser userFromDataBase = await _context.User
-                        .Where(u => u.Id == id)
-                        .FirstOrDefaultAsync();
-                if (userFromDataBase == null)
+                var updatedUser = await _imageService.RemoveFromUser(id);
+                if (updatedUser == null)
                 {
                     return BadRequest();
                 }
                 else
                 {
-                    using (var ms = new MemoryStream())
-                    {
-                        file.CopyTo(ms);
-                        var fileBytes = ms.ToArray();
-                        string s = Convert.ToBase64String(fileBytes);
-
-                        userFromDataBase.Image = fileBytes;
-                        await _context.SaveChangesAsync();
-                        IUser userFromDataBaseSecond = await _context.User
-                                .Where(u => u.Id == id)
-                                .FirstOrDefaultAsync();
-                        return Ok(userFromDataBaseSecond);
-                    };
+                    return Ok(updatedUser);
                 }
             }
-            catch (Exception)
+            else
             {
-                throw new Exception("Error: User not found!");
+                IFormFile file = Request.Form.Files[0];
+                var updatedUser = await _imageService.AddToUser(id, file);
+                if (updatedUser == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    return Ok(updatedUser);
+                }
             }
         }
 
         private bool UserExists(int id)
         {
-            return _context.User.Any(e => e.Id == id);
+            return _context.Users.Any(e => e.Id == id);
         }
     }
 }

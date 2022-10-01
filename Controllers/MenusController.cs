@@ -25,7 +25,7 @@ namespace ecommerce_API.Controllers
         [Route("getAll")]
         public async Task<ActionResult<IEnumerable<Menu>>> GetMenu()
         {
-            return await _context.Menu
+            return await _context.Menus
                 .Include(m => m.SubMenus)
                 .ThenInclude(s => s.Links)
                 .ToListAsync();
@@ -52,7 +52,7 @@ namespace ecommerce_API.Controllers
                     }
                     if (boolianFlagLink == false)
                     {
-                        _context.Links.Remove(linkDb);
+                        _context.SubMenuLinks.Remove(linkDb);
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -60,20 +60,20 @@ namespace ecommerce_API.Controllers
 
             var checkLinkForCreation = async (SubMenu subMenuClient) =>
             {
-                List<SubMenuLinks> subMenuLinksFromDb = await _context.Links
+                List<SubMenuLinks> subMenuLinksFromDb = await _context.SubMenuLinks
                                         .AsNoTracking()
                                         .Where(l => l.SubMenuId == subMenuClient.Id)
                                         .ToListAsync();
                 ICollection<SubMenuLinks> subMenuLinksFromClient = subMenuClient.Links;
                 foreach (SubMenuLinks linkClient in subMenuLinksFromClient)
                 {
-                    var linkFromDb = await _context.Links
+                    var linkFromDb = await _context.SubMenuLinks
                     .AsNoTracking()
                     .Where(l => l.Id == linkClient.Id)
                     .FirstOrDefaultAsync();
                     if (linkFromDb == null)
                     {
-                        SubMenu subMenu = _context.subMenu
+                        SubMenu subMenu = _context.SubMenu
                         .AsNoTracking()
                         .Where(s => s.Id == subMenuClient.Id)
                         .Include(l => l.Links)
@@ -86,13 +86,13 @@ namespace ecommerce_API.Controllers
 
             var checkSubMenuForCreation = async (Menu menuClient, SubMenu subMenuClient) =>
             {
-                SubMenu menuExist = await _context.subMenu
+                SubMenu menuExist = await _context.SubMenu
                 .AsNoTracking()
                 .Where(s => s.Id == subMenuClient.Id)
                 .FirstOrDefaultAsync();
                 if (menuExist == null)
                 {
-                    Menu menuDb = _context.Menu
+                    Menu menuDb = _context.Menus
                     .AsNoTracking()
                     .Where(m => m.Id == menuClient.Id)
                     .Include(l => l.SubMenus)
@@ -102,7 +102,7 @@ namespace ecommerce_API.Controllers
                 }
             };
 
-            List<SubMenu> sebMenusFromDb = await _context.subMenu
+            List<SubMenu> sebMenusFromDb = await _context.SubMenu
                 .AsNoTracking()
                 .Where(s => s.MenuId == menu.Id)
                 .Include(s => s.Links)
@@ -129,12 +129,12 @@ namespace ecommerce_API.Controllers
                 }
                 if (boolianFlag == false)
                 {
-                    _context.subMenu.Remove(subMenuDb);
+                    _context.SubMenu.Remove(subMenuDb);
                     await _context.SaveChangesAsync();
                 }
             }
 
-            _context.Menu.Update(menu);
+            _context.Menus.Update(menu);
             try
             {
                 await _context.SaveChangesAsync();
@@ -163,7 +163,7 @@ namespace ecommerce_API.Controllers
 
         public async Task<ActionResult<Menu>> PostMenu(Menu menu)
         {
-            _context.Menu.Add(menu);
+            _context.Menus.Add(menu);
 
             await _context.SaveChangesAsync();
 
@@ -176,13 +176,13 @@ namespace ecommerce_API.Controllers
 
         public async Task<IActionResult> DeleteMenu(Menu menu)
         {
-            var MenuFromDatabase = await _context.Menu.FindAsync(menu.Id);
+            var MenuFromDatabase = await _context.Menus.FindAsync(menu.Id);
             if (MenuFromDatabase == null)
             {
                 return NotFound();
             }
 
-            _context.Menu.Remove(MenuFromDatabase);
+            _context.Menus.Remove(MenuFromDatabase);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -190,7 +190,7 @@ namespace ecommerce_API.Controllers
 
         private bool MenuExists(int id)
         {
-            return _context.Menu.Any(e => e.Id == id);
+            return _context.Menus.Any(e => e.Id == id);
         }
     }
 }
