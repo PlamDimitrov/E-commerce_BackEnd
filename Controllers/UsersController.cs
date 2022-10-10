@@ -11,6 +11,7 @@ using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using ecommerce_API.Interfaces;
 using ecommerce_API.Services;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace ecommerce_API.Controllers
 
@@ -22,65 +23,59 @@ namespace ecommerce_API.Controllers
         private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
         private readonly ImageService _imageService;
+        private readonly IUserRepository _userRepository;
 
-        public UsersController(ecommerce_APIContext context, JwtSettings jwtSettings)
+        public UsersController(ecommerce_APIContext context, JwtSettings jwtSettings, IUserRepository userRepository)
         {
             _context = context;
             _jwtSettings = jwtSettings;
             _imageService = new ImageService(context);
+            _userRepository = userRepository;
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetUsers()
+        {
+            var user = _userRepository.GetUsers();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            return Ok(user);
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public IActionResult GetUser(int id)
         {
-            try
+            var user = _userRepository.GetUser(id);
+            if (!ModelState.IsValid)
             {
-                var user = await _context.Users.FindAsync(id);
-                user.Password = "****";
-                if (user == null)
-                {
-                    return NotFound();
-                }
-                return user;
+                return BadRequest(ModelState);
             }
-            catch (Exception)
+            if (user == null)
             {
-                throw new Exception("Error: Not possible to get the user!");
+                return NotFound();
             }
+
+            return Ok(user);
         }
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser( User user)
         {
-            if (id != user.Id)
+            User updatedUser = await _userRepository.UpdateUser(user);
+            if (updatedUser == null)
             {
-                return BadRequest();
+                return NotFound();
             }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw new Exception("Error: Users not eddited!");
-                }
-            }
-
-            return NoContent();
+            return Ok(updatedUser);
         }
 
         // POST: api/Users
@@ -106,7 +101,8 @@ namespace ecommerce_API.Controllers
             {
                 return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Email already in use!" });
                 throw new Exception("Error: Email already in use!");
-            }else
+            }
+            else
             {
                 string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
                 userWithHashedPassword.Password = passwordHash;
@@ -132,7 +128,7 @@ namespace ecommerce_API.Controllers
                 }
             }
 
-            
+
 
         }
 

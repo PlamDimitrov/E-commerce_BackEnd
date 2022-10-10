@@ -36,7 +36,7 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Brand", x => x.Id);
+                    table.PrimaryKey("PK_Brands", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -78,7 +78,7 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Menu", x => x.Id);
+                    table.PrimaryKey("PK_Menus", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,7 +118,7 @@ namespace ecommerce_API.Migrations
                 {
                     table.PrimaryKey("PK_Product", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Product_Brand_BrandId",
+                        name: "FK_Product_Brands_BrandId",
                         column: x => x.BrandId,
                         principalTable: "Brands",
                         principalColumn: "Id",
@@ -136,9 +136,9 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subMenu", x => x.Id);
+                    table.PrimaryKey("PK_SubMenu", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_subMenu_Menu_MenuId",
+                        name: "FK_SubMenu_Menus_MenuId",
                         column: x => x.MenuId,
                         principalTable: "Menus",
                         principalColumn: "Id",
@@ -182,9 +182,9 @@ namespace ecommerce_API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Links", x => x.Id);
+                    table.PrimaryKey("PK_SubMenuLinks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Links_subMenu_SubMenuId",
+                        name: "FK_SubMenuLinks_SubMenu_SubMenuId",
                         column: x => x.SubMenuId,
                         principalTable: "SubMenu",
                         principalColumn: "Id",
@@ -198,7 +198,7 @@ namespace ecommerce_API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Brand_Name",
+                name: "IX_Brands_Name",
                 table: "Brands",
                 column: "Name",
                 unique: true);
@@ -215,11 +215,6 @@ namespace ecommerce_API.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Links_SubMenuId",
-                table: "SubMenuLinks",
-                column: "SubMenuId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Product_BrandId",
                 table: "Product",
                 column: "BrandId");
@@ -231,9 +226,14 @@ namespace ecommerce_API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_subMenu_MenuId",
+                name: "IX_SubMenu_MenuId",
                 table: "SubMenu",
                 column: "MenuId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubMenuLinks_SubMenuId",
+                table: "SubMenuLinks",
+                column: "SubMenuId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",

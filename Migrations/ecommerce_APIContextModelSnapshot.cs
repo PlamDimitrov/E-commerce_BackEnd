@@ -22,7 +22,7 @@ namespace ecommerce_API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("ecommerce_API.Admins", b =>
+            modelBuilder.Entity("ecommerce_API.Admin", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -53,7 +53,7 @@ namespace ecommerce_API.Migrations
                     b.ToTable("Admins");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Brands", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Brand", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -185,7 +185,7 @@ namespace ecommerce_API.Migrations
                     b.ToTable("SubMenuLinks");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Menus", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Menu", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -259,7 +259,7 @@ namespace ecommerce_API.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Users", b =>
+            modelBuilder.Entity("ecommerce_API.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -314,19 +314,19 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenu", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.Menus", "Menus")
+                    b.HasOne("ecommerce_API.Entities.Menu", "Menu")
                         .WithMany("SubMenus")
                         .HasForeignKey("MenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Menus");
+                    b.Navigation("Menu");
                 });
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenuLinks", b =>
                 {
                     b.HasOne("ecommerce_API.Entities.MainMenu.SubMenu", "SubMenu")
-                        .WithMany("SubMenuLinks")
+                        .WithMany("Links")
                         .HasForeignKey("SubMenuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -336,16 +336,16 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.Product", b =>
                 {
-                    b.HasOne("ecommerce_API.Entities.Brands", "Brands")
+                    b.HasOne("ecommerce_API.Entities.Brand", "Brand")
                         .WithMany("Products")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Brands");
+                    b.Navigation("Brand");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Brands", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Brand", b =>
                 {
                     b.Navigation("Products");
                 });
@@ -357,10 +357,10 @@ namespace ecommerce_API.Migrations
 
             modelBuilder.Entity("ecommerce_API.Entities.MainMenu.SubMenu", b =>
                 {
-                    b.Navigation("SubMenuLinks");
+                    b.Navigation("Links");
                 });
 
-            modelBuilder.Entity("ecommerce_API.Entities.Menus", b =>
+            modelBuilder.Entity("ecommerce_API.Entities.Menu", b =>
                 {
                     b.Navigation("SubMenus");
                 });
