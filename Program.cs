@@ -21,6 +21,7 @@ builder.Services.AddJWTTokenServices(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;

@@ -12,6 +12,7 @@ using Microsoft.Data.SqlClient;
 using ecommerce_API.Interfaces;
 using ecommerce_API.Services;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using ecommerce_API.Dto;
 
 namespace ecommerce_API.Controllers
 
@@ -68,7 +69,7 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutUser( User user)
+        public async Task<IActionResult> PutUser(User user)
         {
             User updatedUser = await _userRepository.UpdateUser(user);
             if (updatedUser == null)
@@ -97,7 +98,7 @@ namespace ecommerce_API.Controllers
                 return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Username already in use!" });
                 throw new Exception("Error: Username already in use!");
             }
-            else if (checkEmail != null)
+            else if (checkEmail != null && checkEmail.Email != "")
             {
                 return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Email already in use!" });
                 throw new Exception("Error: Email already in use!");
@@ -110,7 +111,6 @@ namespace ecommerce_API.Controllers
                 {
                     _context.Users.Add(userWithHashedPassword);
                     await _context.SaveChangesAsync();
-                    userWithHashedPassword.Password = null;
                     return Ok(userWithHashedPassword);
 
                 }
@@ -158,37 +158,21 @@ namespace ecommerce_API.Controllers
         [Route("login")]
         public async Task<ActionResult<IUser>> LogInUser(User userLogin)
         {
-            bool verified = false;
             try
             {
-                User userFromDataBase = await _context.Users
-                    .Where(u => u.UserName == userLogin.UserName)
-                    .FirstOrDefaultAsync();
-                if (userFromDataBase != null)
+                UserDto user = await _userRepository.LogInUser(userLogin);
+                if (user != null)
                 {
-                    verified = BCrypt.Net.BCrypt.Verify(userLogin.Password, userFromDataBase.Password);
-                    userFromDataBase.Password = "*****";
-                }
-                if (userFromDataBase != null && verified == true)
-                {
-                    UserForClientCookie userForClientCookie = new UserForClientCookie();
-                    userForClientCookie.Id = userFromDataBase.Id;
-                    userForClientCookie.userName = userFromDataBase.UserName;
-                    userForClientCookie.password = userFromDataBase.Password;
-                    userForClientCookie.email = userFromDataBase.Email;
-
-                    var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, userFromDataBase);
+                    var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, user);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateUserCookie(Response, userForClientCookie);
-                    return Ok(userFromDataBase);
+                    CookieHelper.CreateUserCookie(Response, user);
+                    return Ok(user);
                 }
                 else
                 {
                     return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or Password!" });
                     throw new Exception("Error: Wrong username or Password!");
                 }
-
-
             }
             catch (Exception)
             {

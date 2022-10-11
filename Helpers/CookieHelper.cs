@@ -1,4 +1,5 @@
-﻿using ecommerce_API.Models;
+﻿using ecommerce_API.Dto;
+using ecommerce_API.Models;
 using System.Text.Json;
 
 namespace ecommerce_API.Helpers
@@ -62,7 +63,7 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-        public static void CreateUserCookie(HttpResponse response, UserForClientCookie user)
+        public static void CreateUserCookie(HttpResponse response, UserDto user)
         {
             response.Cookies.Append("user-info", JsonSerializer.Serialize(user), new CookieOptions()
             {

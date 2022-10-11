@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ecommerce_API.Models;
 using ecommerce_API.Data;
+using ecommerce_API.Dto;
 
 namespace ecommerce_API.JwtHelpers
 {
@@ -52,7 +53,7 @@ namespace ecommerce_API.JwtHelpers
                 throw;
             }
         }
-        public static UserTokens SetUserToken(JwtSettings jwtSettings, User userFromDataBase)
+        public static UserTokens SetUserToken(JwtSettings jwtSettings, UserDto userFromDataBase)
         {
             var userData = userFromDataBase;
             var token = GenTokenkey(new UserTokens()

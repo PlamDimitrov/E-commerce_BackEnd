@@ -1,4 +1,7 @@
-﻿namespace ecommerce_API.Interfaces
+﻿using ecommerce_API.Dto;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ecommerce_API.Interfaces
 {
     public interface IUserRepository
     {
@@ -7,5 +10,6 @@
         User GetUser(string username);
         Task<User>  UpdateUser(User user);
         User CreateUser(User user);
+        Task<UserDto?> LogInUser(User userLogin);
     }
 }
