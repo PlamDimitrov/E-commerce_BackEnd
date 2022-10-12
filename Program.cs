@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ecommerce_API.Services;
 using ecommerce_API.Interfaces;
 using ecommerce_API.Repository;
+using ecommerce_API;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
@@ -20,8 +21,10 @@ builder.Services.AddJWTTokenServices(builder.Configuration);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository<User>, UserRepository>();
+builder.Services.AddScoped<IUserRepository<Admin>, AdminRepository>();
+builder.Services.AddScoped<IUserService<User>, UserService>();
+builder.Services.AddScoped<IUserService<Admin>, AdmionService>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;

@@ -3,13 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ecommerce_API.Interfaces
 {
-    public interface IUserRepository
+    public interface IUserRepository<T>
     {
-        ICollection<User> GetUsers();
-        User GetUser(int id);
-        User GetUser(string username);
-        Task<User>  UpdateUser(User user);
-        User CreateUser(User user);
-        Task<UserDto?> LogInUser(User userLogin);
+        Task<UserDto?> Create(T userToCreate);
+        Task<ICollection<UserDto>> GetAll();
+        Task<T?> GetOne(int id);
+        Task<T> GetOne(string username);
+        Task<T>  Update(T user);
+        Task<bool> Delete(int id);
+        Task<UserDto?> LogIn(T userLogin);
+        Task<UserDto> GetDto(T user);
+        Task<UserDto?> RemoveImage(int id);
+        Task<UserDto?> AddImage(int id, IFormFile file);
+        bool CheckIfExists(int id);
+        bool CheckIfExists(string emailOrUsername);
     }
 }

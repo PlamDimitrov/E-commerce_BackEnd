@@ -4,17 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ecommerce_API.Services
 {
-    public class UserService : IUserService<User>
+    public class AdmionService : IUserService<Admin>
     {
         private readonly ecommerce_APIContext _context;
-        public UserService(ecommerce_APIContext context)
+        public AdmionService(ecommerce_APIContext context)
         {
             _context = context;
         }
-        public async Task<bool> VerifyUserPassword(User user)
+        public async Task<bool> VerifyUserPassword(Admin user)
         {
             bool verified = false;
-            User? userFromDataBase = await _context.Users.Where(u => u.UserName == user.UserName).FirstOrDefaultAsync();
+            Admin? userFromDataBase = await _context.Admins.Where(u => u.UserName == user.UserName).FirstOrDefaultAsync();
             if (userFromDataBase != null)
             {
                 verified = BCrypt.Net.BCrypt.Verify(user.Password, userFromDataBase.Password);

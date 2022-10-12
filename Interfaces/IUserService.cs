@@ -1,7 +1,7 @@
 ﻿namespace ecommerce_API.Interfaces
 {
-    public interface IUserService
+    public interface IUserService<T>
     {
-        Task<bool> VerifyUserPassword(User user);
+        Task<bool> VerifyUserPassword(T user);
     }
 }

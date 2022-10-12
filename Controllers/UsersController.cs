@@ -21,38 +21,40 @@ namespace ecommerce_API.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
-        private readonly ImageService _imageService;
-        private readonly IUserRepository _userRepository;
+        private readonly IUserRepository<User> _userRepository;
 
-        public UsersController(ecommerce_APIContext context, JwtSettings jwtSettings, IUserRepository userRepository)
+        public UsersController(JwtSettings jwtSettings, IUserRepository<User> userRepository)
         {
-            _context = context;
             _jwtSettings = jwtSettings;
-            _imageService = new ImageService(context);
             _userRepository = userRepository;
         }
 
         [HttpGet]
         [Authorize]
-        public IActionResult GetUsers()
+        public async Task<ActionResult<List<IUser>>> GetAll()
         {
-            var user = _userRepository.GetUsers();
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                var users = await _userRepository.GetAll();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(users);
             }
-
-            return Ok(user);
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to get all users!");
+            }
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
         [Authorize]
-        public IActionResult GetUser(int id)
+        public async Task<ActionResult<IUser>> GetUser(int id)
         {
-            var user = _userRepository.GetUser(id);
+            var user = await _userRepository.GetOne(id);
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -71,7 +73,7 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> PutUser(User user)
         {
-            User updatedUser = await _userRepository.UpdateUser(user);
+            User updatedUser = await _userRepository.Update(user);
             if (updatedUser == null)
             {
                 return NotFound();
@@ -86,71 +88,51 @@ namespace ecommerce_API.Controllers
 
         public async Task<ActionResult<IUser>> PostUser(User user)
         {
-            User userWithHashedPassword = user;
-            IUser checkUserName = await _context.Users
-                .Where(u => u.UserName == user.UserName)
-                .FirstOrDefaultAsync();
-            IUser checkEmail = await _context.Users
-                .Where(u => u.Email == user.Email)
-                .FirstOrDefaultAsync();
-            if (checkUserName != null)
+            if (_userRepository.CheckIfExists(user.UserName))
             {
                 return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Username already in use!" });
                 throw new Exception("Error: Username already in use!");
             }
-            else if (checkEmail != null && checkEmail.Email != "")
+            else if (_userRepository.CheckIfExists(user.Email) && user.Email != "")
             {
                 return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Email already in use!" });
                 throw new Exception("Error: Email already in use!");
             }
             else
             {
-                string passwordHash = BCrypt.Net.BCrypt.HashPassword(user.Password);
-                userWithHashedPassword.Password = passwordHash;
                 try
                 {
-                    _context.Users.Add(userWithHashedPassword);
-                    await _context.SaveChangesAsync();
-                    return Ok(userWithHashedPassword);
-
+                    UserDto userDto = await _userRepository.Create(user);
+                    if (userDto != null)
+                    {
+                        return Ok(userDto);
+                    }
+                    else
+                    {
+                        return BadRequest("User was not created!");
+                    }
                 }
-                catch (SqlException sqlEx)
+                catch (Exception)
                 {
-                    Console.WriteLine("SQL Exception: " + sqlEx);
-                    return BadRequest(sqlEx.Errors);
-                    // throw new Exception("Error: Users not created!");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception: " + ex);
-                    return BadRequest(ex.Data.Values);
-                    // throw new Exception("Error: Users not created!");
+                    return BadRequest("Connection error!");
                 }
             }
-
-
-
         }
 
         [HttpPost]
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<IUser>> AuthorizeUser(User user)
+        public async Task<ActionResult<IUser>> AuthorizeUser(User userAuth)
         {
-            int id = user.Id;
-            string userName = user.UserName;
-            IUser userFromDataBase = await _context.Users
-                    .Where(u => u.Id == id)
-                    .FirstOrDefaultAsync();
-            if (userFromDataBase != null && userFromDataBase.UserName == userName)
+            UserDto user = await _userRepository.GetDto(userAuth);
+            if (user != null)
             {
-                userFromDataBase.Password = "****";
-                return Ok(userFromDataBase);
+                return Ok(user);
             }
             else
             {
-                return Unauthorized("You have no authorization!");
+                return Unauthorized("User don't exist!");
             }
         }
 
@@ -160,7 +142,7 @@ namespace ecommerce_API.Controllers
         {
             try
             {
-                UserDto user = await _userRepository.LogInUser(userLogin);
+                UserDto user = await _userRepository.LogIn(userLogin);
                 if (user != null)
                 {
                     var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, user);
@@ -185,17 +167,18 @@ namespace ecommerce_API.Controllers
         [Route("logout")]
         public async Task<ActionResult> LogoutUser()
         {
-            string tokenValue = Request.Cookies["ecom-auth-token"];
-            var handler = new JwtSecurityTokenHandler();
-            var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
-            var expiredToken = new ExpiredToken();
-            expiredToken.ExpiredTokenValue = tokenValue;
-            expiredToken.ExpiredTime = tokenValidTo;
+            //  string tokenValue = Request.Cookies["ecom-auth-token"];
+            //   var handler = new JwtSecurityTokenHandler();
+            //  var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
+            // var expiredToken = new ExpiredToken();
+            // expiredToken.ExpiredTokenValue = tokenValue;
+            //  expiredToken.ExpiredTime = tokenValidTo;
 
             try
             {
-                _context.ExpiredTokens.Add(expiredToken);
-                await _context.SaveChangesAsync();
+                //  TokensRepository to be implemented
+                //  _context.ExpiredTokens.Add(expiredToken);
+                //  await _context.SaveChangesAsync();
                 CookieHelper.RemoveTokenCookie(Response);
                 CookieHelper.RemoveUserCookie(Response);
                 return Ok();
@@ -213,21 +196,20 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            User user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
             try
             {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
+                bool userIsDeleted = await _userRepository.Delete(id);
+                if (userIsDeleted)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch (Exception)
             {
-
                 throw new Exception("Error: Users not deleted!");
             }
         }
@@ -239,34 +221,29 @@ namespace ecommerce_API.Controllers
         {
             if (Request.Form.Files.Count == 0)
             {
-                var updatedUser = await _imageService.RemoveFromUser(id);
-                if (updatedUser == null)
+                UserDto user = await _userRepository.RemoveImage(id);
+                if (user == null)
                 {
                     return BadRequest();
                 }
                 else
                 {
-                    return Ok(updatedUser);
+                    return Ok(user);
                 }
             }
             else
             {
                 IFormFile file = Request.Form.Files[0];
-                var updatedUser = await _imageService.AddToUser(id, file);
-                if (updatedUser == null)
+                UserDto user = await _userRepository.AddImage(id, file);
+                if (user == null)
                 {
                     return BadRequest();
                 }
                 else
                 {
-                    return Ok(updatedUser);
+                    return Ok(user);
                 }
             }
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.Id == id);
         }
     }
 }

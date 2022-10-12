@@ -5,46 +5,125 @@ using ecommerce_API.Interfaces;
 using ecommerce_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace ecommerce_API.Repository
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : IUserRepository<User>
     {
         private readonly ecommerce_APIContext _context;
-        private readonly IUserService _userService;
-        public UserRepository(ecommerce_APIContext context, IUserService userService)
+        private readonly IUserService<User> _userService;
+        public UserRepository(ecommerce_APIContext context, IUserService<User> userService)
         {
             _context = context;
             _userService = userService;
         }
 
-        public User CreateUser(User user)
+        public async Task<UserDto?> Create(User userToCreate)
         {
-            throw new NotImplementedException();
+            User userWithHashedPassword = userToCreate;
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(userToCreate.Password);
+            userWithHashedPassword.Password = passwordHash;
+            try
+            {
+                _context.Users.Add(userWithHashedPassword);
+                await _context.SaveChangesAsync();
+                User? createdUser = await _context.Users
+                    .Where(u => u.UserName == userToCreate.UserName)
+                    .FirstOrDefaultAsync();
+                if (createdUser != null)
+                {
+                    UserDto user = new UserDto();
+                    user.Id = createdUser.Id;
+                    user.UserName = createdUser.UserName;
+                    user.Email = createdUser.Email;
+                    user.Image = createdUser.Image;
+                    return user;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                Console.WriteLine("SQL Exception: " + sqlEx);
+                return null;
+                // throw new Exception("Error: Users not created!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception: " + ex);
+                return null;
+                // throw new Exception("Error: Users not created!");
+            }
         }
-
-        public User GetUser(int id)
+        public async Task<bool> Delete(int id)
         {
-            User user = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+            try
+            {
+                User? user = await _context.Users.FindAsync(id);
+                if (user != null)
+                {
+                    _context.Users.Remove(user);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Something went wrong with the DB. Users not deleted!");
+            }
+        }
+        public async Task<User?> GetOne(int id)
+        {
+            User? user = await _context.Users.Where(u => u.Id == id).FirstOrDefaultAsync();
             return user;
         }
-
-        public User GetUser(string username)
+        public async Task<User> GetOne(string username)
         {
-            User user = _context.Users.Where(u => u.UserName == username).FirstOrDefault();
+            User user = await _context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
             return user;
         }
-
-        public ICollection<User> GetUsers()
+        public async Task<UserDto?> GetDto(User userAuth)
         {
-            ICollection<User> users = _context.Users.OrderBy(u => u.Id).ToList();
-            return users;
+            IUser? userFromDataBase = await _context.Users
+                    .Where(u => u.Id == userAuth.Id)
+                    .FirstOrDefaultAsync();
+            if (userFromDataBase != null)
+            {
+                UserDto user = new UserDto();
+                user.Id = userFromDataBase.Id;
+                user.UserName = userFromDataBase.UserName;
+                user.Email = userFromDataBase.Email;
+                return user;
+            }
+            else
+            {
+                return null;
+            }
         }
-
-        public async Task<User?> UpdateUser(User user)
+        public async Task<ICollection<UserDto>> GetAll()
         {
-            var promise = new TaskCompletionSource<User>();
+            ICollection<User> users = await _context.Users.OrderBy(u => u.Id).ToListAsync();
+            ICollection<UserDto> userDtos = new List<UserDto>();
+            foreach (var user in users)
+            {
+                UserDto userDto = new UserDto();
+                userDto.Id = user.Id;
+                userDto.UserName = user.UserName;
+                userDto.Email = user.Email;
+                userDtos.Add(userDto);
+            }
+            return userDtos;
+        }
+        public async Task<User> Update(User user)
+        {
             _context.Entry(user).State = EntityState.Modified;
             try
             {
@@ -57,7 +136,7 @@ namespace ecommerce_API.Repository
                 throw new Exception("Error: Update User failed! Problem with database connection.");
             }
         }
-        public async Task<UserDto?> LogInUser(User userLogin)
+        public async Task<UserDto?> LogIn(User userLogin)
         {
             try
             {
@@ -83,6 +162,69 @@ namespace ecommerce_API.Repository
 
                 throw new Exception("Error: Something went wrong with the database on User Login!");
             }
+        }
+        public async Task<UserDto?> RemoveImage(int id)
+        {
+            User? userFromDataBase = await _context.Users
+                        .Where(e => e.Id == id)
+                        .FirstOrDefaultAsync();
+            if (userFromDataBase == null)
+            {
+                return null;
+            }
+            else
+            {
+                userFromDataBase.Image = null;
+                await _context.SaveChangesAsync();
+                UserDto user = new UserDto();
+                user.Id = userFromDataBase.Id;
+                user.UserName = userFromDataBase.UserName;
+                user.Email = userFromDataBase.Email;
+                user.Image = userFromDataBase.Image;
+                return user;
+            }
+        }
+        public async Task<UserDto?> AddImage(int id, IFormFile file)
+        {
+            User? userFromDataBase = await _context.Users
+                        .Where(e => e.Id == id)
+                        .FirstOrDefaultAsync();
+            if (userFromDataBase == null)
+            {
+                return null;
+            }
+            else
+            {
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        byte[] fileBytes = ms.ToArray();
+
+                        userFromDataBase.Image = fileBytes;
+                        await _context.SaveChangesAsync();
+                    };
+                    UserDto user = new UserDto();
+                    user.Id = userFromDataBase.Id;
+                    user.UserName = userFromDataBase.UserName;
+                    user.Email = userFromDataBase.Email;
+                    user.Image = userFromDataBase.Image;
+                    return user;
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Error: Not found!");
+                }
+            }
+        }
+        public bool CheckIfExists(int id)
+        {
+            return _context.Users.Any(e => e.Id == id);
+        }
+        public bool CheckIfExists(string emailOrUsername)
+        {
+            return _context.Users.Any(e => e.Email == emailOrUsername || e.UserName == emailOrUsername);
         }
     }
 }

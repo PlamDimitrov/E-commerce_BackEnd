@@ -11,6 +11,8 @@ using System.Text.Json;
 using ecommerce_API.Interfaces;
 using Newtonsoft.Json;
 using ecommerce_API.Services;
+using ecommerce_API.Repository;
+using ecommerce_API.Dto;
 
 namespace ecommerce_API.Controllers
 {
@@ -21,30 +23,33 @@ namespace ecommerce_API.Controllers
         private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
         private readonly ImageService _imageService;
+        private readonly IUserRepository<Admin> _adminRepository;
 
-        public AdminsController(ecommerce_APIContext context, JwtSettings jwtSettings)
+        public AdminsController(ecommerce_APIContext context, JwtSettings jwtSettings, IUserRepository<Admin> adminRepository)
         {
             _context = context;
             _jwtSettings = jwtSettings;
             _imageService = new ImageService(context);
+            _adminRepository = adminRepository; 
         }
 
         // GET: api/Admins
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<IUser>>> GetAllAdmins()
+        public async Task<ActionResult<List<IUser>>> GetAll()
         {
-            if (_context.Admins == null)
-            {
-                return NotFound();
-            }
             try
             {
-                return await _context.Admins.ToListAsync();
+                var admins = await _adminRepository.GetAll();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(admins);
             }
             catch (Exception)
             {
-                throw new Exception("Error: Not possible to get all admins!");
+                throw new Exception("Error: Not possible to get all users!");
             }
         }
 
@@ -53,29 +58,17 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<IUser>> GetAdmin(int id)
         {
-            if (_context.Admins == null)
+            var admin = await _adminRepository.GetOne(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            if (admin == null)
             {
                 return NotFound();
             }
-            var cookieValue = Request.Cookies["admin-info"];
-            if (cookieValue == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                var admin = await _context.Admins.FindAsync(id);
-                if (admin == null)
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    admin.Password = "****";
-                    return admin;
-                }
 
-            }
+            return Ok(admin);
 
         }
 
@@ -83,53 +76,48 @@ namespace ecommerce_API.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateAdmin(int id, Admin admin)
+        public async Task<IActionResult> UpdateAdmin(Admin admin)
         {
-            if (id != admin.Id)
+            Admin updatedAdmin = await _adminRepository.Update(admin);
+            if (updatedAdmin == null)
             {
-                return BadRequest();
+                return NotFound();
             }
-
-            _context.Entry(admin).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AdminExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(updatedAdmin);
         }
 
         [HttpPost]
         [Route("register")]
         public async Task<ActionResult<IUser>> RegisterAdmin(Admin admin)
         {
-            Admin adminWithHashedPassword = admin;
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(admin.Password);
-            adminWithHashedPassword.Password = passwordHash;
-            try
+            if (_adminRepository.CheckIfExists(admin.UserName))
             {
-                _context.Admins.Add(adminWithHashedPassword);
-                await _context.SaveChangesAsync();
-                adminWithHashedPassword.Password = "****";
-                return Ok(adminWithHashedPassword);
-
+                return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Username already in use!" });
+                throw new Exception("Error: Username already in use!");
             }
-            catch (Exception)
+            else if (_adminRepository.CheckIfExists(admin.Email) && admin.Email != "")
             {
-
-                throw new Exception("Error: Admins not created!");
+                return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Email already in use!" });
+                throw new Exception("Error: Email already in use!");
+            }
+            else
+            {
+                try
+                {
+                    UserDto adminDto = await _adminRepository.Create(admin);
+                    if (adminDto != null)
+                    {
+                        return Ok(adminDto);
+                    }
+                    else
+                    {
+                        return BadRequest("User was not created!");
+                    }
+                }
+                catch (Exception)
+                {
+                    return BadRequest("Connection error!");
+                }
             }
 
         }
@@ -137,21 +125,16 @@ namespace ecommerce_API.Controllers
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<IUser>> AuthorizeAdmin(Admin admin)
+        public async Task<ActionResult<IUser>> AuthorizeAdmin(Admin adminAuth)
         {
-            int id = admin.Id;
-            string userName = admin.UserName;
-            var adminFromDataBase = await _context.Admins
-                    .Where(u => u.Id == id)
-                    .FirstOrDefaultAsync();
-            if (adminFromDataBase != null && adminFromDataBase.UserName == userName)
+            UserDto user = await _adminRepository.GetDto(adminAuth);
+            if (user != null)
             {
-                adminFromDataBase.Password = "****";
-                return Ok(adminFromDataBase);
+                return Ok(user);
             }
             else
             {
-                return Unauthorized("You have no authorization!");
+                return Unauthorized("Admin don't exist!");
             }
         }
 
@@ -161,62 +144,44 @@ namespace ecommerce_API.Controllers
         [HttpPost]
         [Route("login")]
 
-        public async Task<ActionResult<Admin>> LoginAdmin(Admin userLogin)
+        public async Task<ActionResult<IUser>> LoginAdmin(Admin userLogin)
         {
-            bool verified = false;
             try
             {
-                Admin? adminFromDataBase = await _context.Admins
-                    .Where(u => u.UserName == userLogin.UserName)
-                    .FirstOrDefaultAsync();
-
-                if (adminFromDataBase != null)
+                UserDto admin = await _adminRepository.LogIn(userLogin);
+                if (admin != null)
                 {
-                    string passwordHash = BCrypt.Net.BCrypt.HashPassword(userLogin.Password);
-                    verified = BCrypt.Net.BCrypt.Verify(userLogin.Password, adminFromDataBase.Password);
-                    adminFromDataBase.Password = "*****";
-                }
-                if (adminFromDataBase != null && verified == true)
-                {
-                    UserForClientCookie userForClientCookie = new UserForClientCookie();
-                    userForClientCookie.Id = adminFromDataBase.Id;
-                    userForClientCookie.userName = adminFromDataBase.UserName;
-                    userForClientCookie.password = adminFromDataBase.Password;
-                    userForClientCookie.email = adminFromDataBase.Email;
-
-                    UserTokens token = JwtHelpers.JwtHelpers.SetAdminToken(_jwtSettings, adminFromDataBase);
+                    var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, admin);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateAdminCookie(Response, userForClientCookie);
-                    return Ok(adminFromDataBase);
+                    CookieHelper.CreateUserCookie(Response, admin);
+                    return Ok(admin);
                 }
                 else
                 {
                     return BadRequest(new ResponseError { ErrorCode = 400, ErrorMessage = "Wrong username or Password!" });
                     throw new Exception("Error: Wrong username or Password!");
                 }
-
-
             }
             catch (Exception)
             {
-                throw new Exception("Error: Users was not found in the database!");
+                throw new Exception("Error: Wrong username or Password!");
             }
         }
 
         [HttpPost]
         [Route("logout")]
-        public async Task<ActionResult<Admin>> LogoutAdmin()
+        public async Task<ActionResult> LogoutAdmin()
         {
-            var tokenValue = Request.Cookies["ecom-auth-token"];
-            var handler = new JwtSecurityTokenHandler();
-            var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
-            var expiredToken = new ExpiredToken();
-            expiredToken.ExpiredTokenValue = tokenValue;
-            expiredToken.ExpiredTime = tokenValidTo;
+          //  var tokenValue = Request.Cookies["ecom-auth-token"];
+          //  var handler = new JwtSecurityTokenHandler();
+          //  var tokenValidTo = handler.ReadJwtToken(tokenValue).ValidTo;
+          //  var expiredToken = new ExpiredToken();
+          //  expiredToken.ExpiredTokenValue = tokenValue;
+          //  expiredToken.ExpiredTime = tokenValidTo;
             try
             {
-                _context.ExpiredTokens.Add(expiredToken);
-                await _context.SaveChangesAsync();
+             //   _context.ExpiredTokens.Add(expiredToken);
+             //   await _context.SaveChangesAsync();
                 CookieHelper.RemoveTokenCookie(Response);
                 CookieHelper.RemoveAdminCookie(Response);
                 return Ok();
@@ -232,20 +197,22 @@ namespace ecommerce_API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdmin(int id)
         {
-            if (_context.Admins == null)
+            try
             {
-                return NotFound();
+                bool adminIsDeleted = await _adminRepository.Delete(id);
+                if (adminIsDeleted)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
-            var admin = await _context.Admins.FindAsync(id);
-            if (admin == null)
+            catch (Exception)
             {
-                return NotFound();
+                throw new Exception("Error: Users not deleted!");
             }
-
-            _context.Admins.Remove(admin);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         [HttpPost]
@@ -255,34 +222,29 @@ namespace ecommerce_API.Controllers
         {
             if (Request.Form.Files.Count == 0)
             {
-                var updatedAdmin = await _imageService.RemoveFromAdmin(id);
-                if (updatedAdmin == null)
+                UserDto admin = await _adminRepository.RemoveImage(id);
+                if (admin == null)
                 {
                     return BadRequest();
                 }
                 else
                 {
-                    return Ok(updatedAdmin);
+                    return Ok(admin);
                 }
             }
             else
             {
                 IFormFile file = Request.Form.Files[0];
-                var updatedAdmin = await _imageService.AddToAdmin(id, file);
-                if (updatedAdmin == null)
+                UserDto admin = await _adminRepository.AddImage(id, file);
+                if (admin == null)
                 {
                     return BadRequest();
                 }
                 else
                 {
-                    return Ok(updatedAdmin);
+                    return Ok(admin);
                 }
             }
-        }
-
-        private bool AdminExists(int id)
-        {
-            return (_context.Admins?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
