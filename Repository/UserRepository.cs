@@ -85,15 +85,15 @@ namespace ecommerce_API.Repository
             User? user = await _context.Users.Where(u => u.Id == id).FirstOrDefaultAsync();
             return user;
         }
-        public async Task<User> GetOne(string username)
+        public async Task<User?> GetOne(string username)
         {
-            User user = await _context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
+            User? user = await _context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
             return user;
         }
-        public async Task<UserDto?> GetDto(User userAuth)
+        public async Task<UserDto?> GetDto(int id)
         {
             IUser? userFromDataBase = await _context.Users
-                    .Where(u => u.Id == userAuth.Id)
+                    .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
             if (userFromDataBase != null)
             {
@@ -101,6 +101,7 @@ namespace ecommerce_API.Repository
                 user.Id = userFromDataBase.Id;
                 user.UserName = userFromDataBase.UserName;
                 user.Email = userFromDataBase.Email;
+                user.Image = userFromDataBase.Image;
                 return user;
             }
             else
@@ -122,7 +123,7 @@ namespace ecommerce_API.Repository
             }
             return userDtos;
         }
-        public async Task<User> Update(User user)
+        public async Task<User?> Update(User user)
         {
             _context.Entry(user).State = EntityState.Modified;
             try

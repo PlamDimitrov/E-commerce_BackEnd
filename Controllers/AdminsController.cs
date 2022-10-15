@@ -1,17 +1,9 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ecommerce_API.Data;
 using ecommerce_API.Models;
 using ecommerce_API.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using System.IdentityModel.Tokens.Jwt;
-using ecommerce_API.Entities;
-using System.Text.Json;
 using ecommerce_API.Interfaces;
-using Newtonsoft.Json;
-using ecommerce_API.Services;
-using ecommerce_API.Repository;
 using ecommerce_API.Dto;
 
 namespace ecommerce_API.Controllers
@@ -20,16 +12,12 @@ namespace ecommerce_API.Controllers
     [ApiController]
     public class AdminsController : ControllerBase
     {
-        private readonly ecommerce_APIContext _context;
         private readonly JwtSettings _jwtSettings;
-        private readonly ImageService _imageService;
         private readonly IUserRepository<Admin> _adminRepository;
 
-        public AdminsController(ecommerce_APIContext context, JwtSettings jwtSettings, IUserRepository<Admin> adminRepository)
+        public AdminsController(JwtSettings jwtSettings, IUserRepository<Admin> adminRepository)
         {
-            _context = context;
             _jwtSettings = jwtSettings;
-            _imageService = new ImageService(context);
             _adminRepository = adminRepository; 
         }
 
@@ -125,9 +113,9 @@ namespace ecommerce_API.Controllers
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<IUser>> AuthorizeAdmin(Admin adminAuth)
+        public async Task<ActionResult<IUser>> AuthorizeAdmin(UserDto adminAuth)
         {
-            UserDto user = await _adminRepository.GetDto(adminAuth);
+            UserDto user = await _adminRepository.GetDto(adminAuth.Id);
             if (user != null)
             {
                 return Ok(user);
@@ -144,16 +132,16 @@ namespace ecommerce_API.Controllers
         [HttpPost]
         [Route("login")]
 
-        public async Task<ActionResult<IUser>> LoginAdmin(Admin userLogin)
+        public async Task<ActionResult<IUser>> LoginAdmin(Admin adminLogin)
         {
             try
             {
-                UserDto admin = await _adminRepository.LogIn(userLogin);
+                UserDto admin = await _adminRepository.LogIn(adminLogin);
                 if (admin != null)
                 {
                     var token = JwtHelpers.JwtHelpers.SetUserToken(_jwtSettings, admin);
                     CookieHelper.CreateTokenCookie(Response, token);
-                    CookieHelper.CreateUserCookie(Response, admin);
+                    CookieHelper.CreateAdminCookie(Response, admin);
                     return Ok(admin);
                 }
                 else

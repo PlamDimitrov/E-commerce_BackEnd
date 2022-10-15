@@ -1,16 +1,8 @@
 ﻿#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
-using System.Text.Json;
-using ecommerce_API.Services;
+using ecommerce_API.Interfaces;
 
 namespace ecommerce_API.Controllers
 {
@@ -18,13 +10,10 @@ namespace ecommerce_API.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly ecommerce_APIContext _context;
-        private readonly ImageService _imageService;
-
-        public CategoriesController(ecommerce_APIContext context)
+        private readonly ICategoryRepository _categoryRepository;
+        public CategoriesController(ICategoryRepository categoryRepository)
         {
-            _context = context;
-            _imageService = new ImageService(context);
+            _categoryRepository = categoryRepository;
         }
 
         // GET: api/Categories
@@ -32,21 +21,21 @@ namespace ecommerce_API.Controllers
         [Route("getAll")]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategory()
         {
-            return await _context.Categories.ToListAsync();
+            return Ok(await _categoryRepository.GetAll());
         }
 
         // GET: api/Categories/5
         [HttpGet("getOne/{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepository.GetOne(id);
 
             if (category == null)
             {
                 return NotFound();
             }
 
-            return category;
+            return Ok(category);
         }
 
         // PUT: api/Categories/5
@@ -55,29 +44,19 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> PutCategory(int id, Category category)
         {
-            Category categoryFromDb = await _context.Categories
-                .Where(c => c.Id == id)
-                .FirstAsync();
-            categoryFromDb.Name = category.Name;
-            _context.Categories.Update(categoryFromDb);
-
+            if (!_categoryRepository.CheckIfExists(id))
+            {
+                return NotFound();
+            }
             try
             {
-                await _context.SaveChangesAsync();
+                Category categoryFromDb = await _categoryRepository.Update(category);
+                return Ok(categoryFromDb);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception)
             {
-                if (!CategoryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw new Exception("Error: Update Category failed! Failed uppon update.");
             }
-
-            return Ok(categoryFromDb);
         }
 
         // POST: api/Categories
@@ -87,10 +66,23 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Category>> PostCategory(Category category)
         {
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCategory", new { id = category.Id }, category);
+            if (!_categoryRepository.CheckIfExists(category.Name))
+            {
+                return BadRequest("Category already exists!");
+            }
+            try
+            {
+                Category brandFromDb = await _categoryRepository.Create(category);
+                if (brandFromDb == null)
+                {
+                    return BadRequest("Category not created!");
+                }
+                return Ok(brandFromDb);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Update Category failed! Failed uppon update.");
+            }
         }
 
         // DELETE: api/Categories/5
@@ -98,16 +90,21 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
+            try
             {
-                return NotFound();
+                bool isDeleted = await _categoryRepository.Delete(id);
+                if (!isDeleted)
+                {
+                    return NotFound();
+                }
+
+                return Ok();
             }
+            catch (Exception)
+            {
 
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+                throw new Exception("Error: Delete Category failed! Failed uppon deletion.");
+            }
         }
 
         [HttpPost]
@@ -117,7 +114,7 @@ namespace ecommerce_API.Controllers
         {
             if (Request.Form.Files.Count == 0)
             {
-                var updatedCategory = await _imageService.RemoveFromCategory(id);
+                var updatedCategory = await _categoryRepository.RemoveImage(id);
                 if (updatedCategory == null)
                 {
                     return BadRequest();
@@ -130,7 +127,7 @@ namespace ecommerce_API.Controllers
             else
             {
                 IFormFile file = Request.Form.Files[0];
-                var updatedCategory = await _imageService.AddToBrand(id, file);
+                var updatedCategory = await _categoryRepository.AddImage(id, file);
                 if (updatedCategory == null)
                 {
                     return BadRequest();
@@ -140,11 +137,6 @@ namespace ecommerce_API.Controllers
                     return Ok(updatedCategory);
                 }
             }
-        }
-
-        private bool CategoryExists(int id)
-        {
-            return _context.Categories.Any(e => e.Id == id);
         }
     }
 }

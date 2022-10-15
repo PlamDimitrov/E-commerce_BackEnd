@@ -52,7 +52,7 @@ namespace ecommerce_API.Helpers
                 Secure = true,
             });
         }
-        public static void CreateAdminCookie(HttpResponse response, UserForClientCookie admin)
+        public static void CreateAdminCookie(HttpResponse response, UserDto admin)
         {
             response.Cookies.Append("admin-info", JsonSerializer.Serialize(admin), new CookieOptions()
             {

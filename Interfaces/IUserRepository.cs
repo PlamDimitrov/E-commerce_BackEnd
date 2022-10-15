@@ -12,7 +12,7 @@ namespace ecommerce_API.Interfaces
         Task<T>  Update(T user);
         Task<bool> Delete(int id);
         Task<UserDto?> LogIn(T userLogin);
-        Task<UserDto> GetDto(T user);
+        Task<UserDto> GetDto(int id);
         Task<UserDto?> RemoveImage(int id);
         Task<UserDto?> AddImage(int id, IFormFile file);
         bool CheckIfExists(int id);

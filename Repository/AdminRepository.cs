@@ -86,10 +86,10 @@ namespace ecommerce_API.Repository
             Admin Admin = await _context.Admins.Where(u => u.UserName == username).FirstOrDefaultAsync();
             return Admin;
         }
-        public async Task<UserDto?> GetDto(Admin adminAuth)
+        public async Task<UserDto?> GetDto(int id)
         {
             IUser? adminFromDataBase = await _context.Admins
-                    .Where(u => u.Id == adminAuth.Id)
+                    .Where(u => u.Id == id)
                     .FirstOrDefaultAsync();
             if (adminFromDataBase != null)
             {
@@ -97,6 +97,7 @@ namespace ecommerce_API.Repository
                 Admin.Id = adminFromDataBase.Id;
                 Admin.UserName = adminFromDataBase.UserName;
                 Admin.Email = adminFromDataBase.Email;
+                Admin.Image = adminFromDataBase.Image;
                 return Admin;
             }
             else

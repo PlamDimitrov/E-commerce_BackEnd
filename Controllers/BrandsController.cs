@@ -1,29 +1,20 @@
 ﻿#nullable disable
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
-using ecommerce_API.Services;
+using ecommerce_API.Interfaces;
 
 namespace ecommerce_API.Controllers
 {
-    public class Payload
-    {
-        public int Id { get; set; }
-    }
-
     [Route("api/[controller]")]
     [ApiController]
     public class BrandsController : ControllerBase
     {
-        private readonly ecommerce_APIContext _context;
-        private readonly ImageService _imageService;
+        private readonly IBrandRepository _brandRepository;
 
-        public BrandsController(ecommerce_APIContext context)
+        public BrandsController(IBrandRepository brandRepository)
         {
-            _context = context;
-            _imageService = new ImageService(context);
+            _brandRepository = brandRepository;
         }
 
         // GET: api/Brands
@@ -31,7 +22,7 @@ namespace ecommerce_API.Controllers
         [Route("getAll")]
         public async Task<ActionResult<IEnumerable<Brand>>> GetBrand()
         {
-            return await _context.Brands.ToListAsync();
+            return Ok(await _brandRepository.GetAll());
         }
 
         // GET: api/Brands/5
@@ -39,14 +30,14 @@ namespace ecommerce_API.Controllers
         [Route("getOne/{id}")]
         public async Task<ActionResult<Brand>> GetBrand(int id)
         {
-            var brand = await _context.Brands.FindAsync(id);
+            var brand = await _brandRepository.GetOne(id);
 
             if (brand == null)
             {
                 return NotFound();
             }
 
-            return brand;
+            return Ok(brand);
         }
 
         // PUT: api/Brands/5
@@ -55,29 +46,19 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> PutBrand(int id, Brand brand)
         {
-            Brand brandFromDb = await _context.Brands
-                .Where(c => c.Id == id)
-                .FirstAsync();
-            brandFromDb.Name = brand.Name;
-            _context.Brands.Update(brandFromDb);
-
+            if (!_brandRepository.CheckIfExists(id))
+            {
+                return NotFound();
+            }
             try
             {
-                await _context.SaveChangesAsync();
+                Brand brandFromDb = await _brandRepository.Update(brand);
+                return Ok(brandFromDb);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception)
             {
-                if (!BrandExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw new Exception("Error: Update Brand failed! Failed uppon update.");
             }
-
-            return Ok(brandFromDb);
         }
 
         // POST: api/Brands
@@ -87,10 +68,23 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Brand>> PostBrand(Brand brand)
         {
-            _context.Brands.Add(brand);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetBrand", new { id = brand.Id }, brand);
+            if (!_brandRepository.CheckIfExists(brand.Name))
+            {
+                return BadRequest("Brand already exists!");
+            }
+            try
+            {
+                Brand brandFromDb = await _brandRepository.Create(brand);
+                if (brandFromDb == null)
+                {
+                    return BadRequest("Brand not created!");
+                }
+                return Ok(brandFromDb);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Update Brand failed! Failed uppon update.");
+            }
         }
 
         // DELETE: api/Brands/5
@@ -98,16 +92,21 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteBrand(int id)
         {
-            var brand = await _context.Brands.FindAsync(id);
-            if (brand == null)
+            try
+            {
+            bool isDeleted = await _brandRepository.Delete(id);
+            if (!isDeleted)
             {
                 return NotFound();
             }
 
-            _context.Brands.Remove(brand);
-            await _context.SaveChangesAsync();
+            return Ok();
+            }
+            catch (Exception)
+            {
 
-            return NoContent();
+                throw new Exception("Error: Delete Brand failed! Failed uppon deletion.");
+            }
         }
 
         [HttpPost]
@@ -117,7 +116,7 @@ namespace ecommerce_API.Controllers
         {
             if (Request.Form.Files.Count == 0)
             {
-                var updatedBrand = await _imageService.RemoveFromBrand(id);
+                var updatedBrand = await _brandRepository.RemoveImage(id);
                 if (updatedBrand == null)
                 {
                     return BadRequest();
@@ -130,7 +129,7 @@ namespace ecommerce_API.Controllers
             else
             {
                 IFormFile file = Request.Form.Files[0];
-                var updatedBrand = await _imageService.AddToBrand(id, file);
+                var updatedBrand = await _brandRepository.AddImage(id, file);
                 if (updatedBrand == null)
                 {
                     return BadRequest();
@@ -140,11 +139,6 @@ namespace ecommerce_API.Controllers
                     return Ok(updatedBrand);
                 }
             }
-        }
-
-        private bool BrandExists(int id)
-        {
-            return _context.Brands.Any(e => e.Id == id);
         }
     }
 }

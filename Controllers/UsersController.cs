@@ -123,9 +123,9 @@ namespace ecommerce_API.Controllers
         [Route("auth")]
         [Authorize]
 
-        public async Task<ActionResult<IUser>> AuthorizeUser(User userAuth)
+        public async Task<ActionResult<IUser>> AuthorizeUser(UserDto userAuth)
         {
-            UserDto user = await _userRepository.GetDto(userAuth);
+            UserDto user = await _userRepository.GetDto(userAuth.Id);
             if (user != null)
             {
                 return Ok(user);
