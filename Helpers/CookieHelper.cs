@@ -54,6 +54,7 @@ namespace ecommerce_API.Helpers
         }
         public static void CreateAdminCookie(HttpResponse response, UserDto admin)
         {
+            admin.Image = null;
             response.Cookies.Append("admin-info", JsonSerializer.Serialize(admin), new CookieOptions()
             {
                 Expires = DateTimeOffset.Now.AddDays(1),
@@ -65,6 +66,7 @@ namespace ecommerce_API.Helpers
         }
         public static void CreateUserCookie(HttpResponse response, UserDto user)
         {
+            user.Image = null;
             response.Cookies.Append("user-info", JsonSerializer.Serialize(user), new CookieOptions()
             {
                 Expires = DateTimeOffset.Now.AddHours(24),

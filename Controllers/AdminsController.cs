@@ -132,7 +132,7 @@ namespace ecommerce_API.Controllers
         [HttpPost]
         [Route("login")]
 
-        public async Task<ActionResult<IUser>> LoginAdmin(Admin adminLogin)
+        public async Task<ActionResult> LoginAdmin(Admin adminLogin)
         {
             try
             {

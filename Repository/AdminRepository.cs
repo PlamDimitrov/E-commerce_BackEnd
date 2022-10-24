@@ -30,12 +30,9 @@ namespace ecommerce_API.Repository
                     .FirstOrDefaultAsync();
                 if (createdAdmin != null)
                 {
-                    UserDto Admin = new UserDto();
-                    Admin.Id = createdAdmin.Id;
-                    Admin.UserName = createdAdmin.UserName;
-                    Admin.Email = createdAdmin.Email;
-                    Admin.Image = createdAdmin.Image;
-                    return Admin;
+                    UserDto admin = new UserDto();
+                    admin.Map(createdAdmin);
+                    return admin;
                 }
                 else
                 {
@@ -93,12 +90,9 @@ namespace ecommerce_API.Repository
                     .FirstOrDefaultAsync();
             if (adminFromDataBase != null)
             {
-                UserDto Admin = new UserDto();
-                Admin.Id = adminFromDataBase.Id;
-                Admin.UserName = adminFromDataBase.UserName;
-                Admin.Email = adminFromDataBase.Email;
-                Admin.Image = adminFromDataBase.Image;
-                return Admin;
+                UserDto admin = new UserDto();
+                admin.Map(adminFromDataBase);
+                return admin;
             }
             else
             {
@@ -112,9 +106,7 @@ namespace ecommerce_API.Repository
             foreach (var admin in admins)
             {
                 UserDto adminDto = new UserDto();
-                adminDto.Id = admin.Id;
-                adminDto.UserName = admin.UserName;
-                adminDto.Email = admin.Email;
+                adminDto.Map(admin);
                 adminDtos.Add(adminDto);
             }
             return adminDtos;
@@ -130,7 +122,7 @@ namespace ecommerce_API.Repository
             }
             catch (Exception)
             {
-                throw new Exception("Error: Update Admin failed! Problem with database connection.");
+                throw new Exception("Error: Update admin failed! Problem with database connection.");
             }
         }
         public async Task<UserDto?> LogIn(Admin adminLogin)
@@ -143,11 +135,9 @@ namespace ecommerce_API.Repository
                 bool verified = await _adminService.VerifyUserPassword(adminLogin);
                 if (verified && adminFromDataBase != null)
                 {
-                    UserDto Admin = new UserDto();
-                    Admin.Id = adminFromDataBase.Id;
-                    Admin.UserName = adminFromDataBase.UserName;
-                    Admin.Email = adminFromDataBase.Email;
-                    return Admin;
+                    UserDto admin = new UserDto();
+                    admin.Map(adminFromDataBase);
+                    return admin;
                 }
                 else
                 {
@@ -157,7 +147,7 @@ namespace ecommerce_API.Repository
             catch (Exception)
             {
 
-                throw new Exception("Error: Something went wrong with the database on Admin Login!");
+                throw new Exception("Error: Something went wrong with the database on admin Login!");
             }
         }
         public async Task<UserDto?> RemoveImage(int id)
@@ -173,12 +163,9 @@ namespace ecommerce_API.Repository
             {
                 adminFromDataBase.Image = null;
                 await _context.SaveChangesAsync();
-                UserDto Admin = new UserDto();
-                Admin.Id = adminFromDataBase.Id;
-                Admin.UserName = adminFromDataBase.UserName;
-                Admin.Email = adminFromDataBase.Email;
-                Admin.Image = adminFromDataBase.Image;
-                return Admin;
+                UserDto admin = new UserDto();
+                admin.Map(adminFromDataBase);
+                return admin;
             }
         }
         public async Task<UserDto?> AddImage(int id, IFormFile file)
@@ -202,12 +189,9 @@ namespace ecommerce_API.Repository
                         adminFromDataBase.Image = fileBytes;
                         await _context.SaveChangesAsync();
                     };
-                    UserDto Admin = new UserDto();
-                    Admin.Id = adminFromDataBase.Id;
-                    Admin.UserName = adminFromDataBase.UserName;
-                    Admin.Email = adminFromDataBase.Email;
-                    Admin.Image = adminFromDataBase.Image;
-                    return Admin;
+                    UserDto admin = new UserDto();
+                    admin.Map(adminFromDataBase);
+                    return admin;
                 }
                 catch (Exception)
                 {

@@ -35,10 +35,7 @@ namespace ecommerce_API.Repository
                 if (createdUser != null)
                 {
                     UserDto user = new UserDto();
-                    user.Id = createdUser.Id;
-                    user.UserName = createdUser.UserName;
-                    user.Email = createdUser.Email;
-                    user.Image = createdUser.Image;
+                    user.Map(createdUser);
                     return user;
                 }
                 else
@@ -98,10 +95,7 @@ namespace ecommerce_API.Repository
             if (userFromDataBase != null)
             {
                 UserDto user = new UserDto();
-                user.Id = userFromDataBase.Id;
-                user.UserName = userFromDataBase.UserName;
-                user.Email = userFromDataBase.Email;
-                user.Image = userFromDataBase.Image;
+                user.Map(userFromDataBase);
                 return user;
             }
             else
@@ -116,9 +110,7 @@ namespace ecommerce_API.Repository
             foreach (var user in users)
             {
                 UserDto userDto = new UserDto();
-                userDto.Id = user.Id;
-                userDto.UserName = user.UserName;
-                userDto.Email = user.Email;
+                userDto.Map(user);
                 userDtos.Add(userDto);
             }
             return userDtos;
@@ -148,9 +140,7 @@ namespace ecommerce_API.Repository
                 if (verified && userFromDataBase != null)
                 {
                     UserDto user = new UserDto();
-                    user.Id = userFromDataBase.Id;
-                    user.UserName = userFromDataBase.UserName;
-                    user.Email = userFromDataBase.Email;
+                    user.Map(userFromDataBase);
                     return user;
                 }
                 else
@@ -178,10 +168,7 @@ namespace ecommerce_API.Repository
                 userFromDataBase.Image = null;
                 await _context.SaveChangesAsync();
                 UserDto user = new UserDto();
-                user.Id = userFromDataBase.Id;
-                user.UserName = userFromDataBase.UserName;
-                user.Email = userFromDataBase.Email;
-                user.Image = userFromDataBase.Image;
+                user.Map(userFromDataBase);
                 return user;
             }
         }
@@ -207,10 +194,7 @@ namespace ecommerce_API.Repository
                         await _context.SaveChangesAsync();
                     };
                     UserDto user = new UserDto();
-                    user.Id = userFromDataBase.Id;
-                    user.UserName = userFromDataBase.UserName;
-                    user.Email = userFromDataBase.Email;
-                    user.Image = userFromDataBase.Image;
+                    user.Map(userFromDataBase);
                     return user;
                 }
                 catch (Exception)
