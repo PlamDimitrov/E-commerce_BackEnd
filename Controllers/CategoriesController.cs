@@ -66,22 +66,25 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Category>> PostCategory(Category category)
         {
-            if (!_categoryRepository.CheckIfExists(category.Name))
+            if (_categoryRepository.CheckIfExists(category.Name))
             {
                 return BadRequest("Category already exists!");
             }
-            try
+            else
             {
-                Category brandFromDb = await _categoryRepository.Create(category);
-                if (brandFromDb == null)
+                try
                 {
-                    return BadRequest("Category not created!");
+                    Category categoryFromDb = await _categoryRepository.Create(category);
+                    if (categoryFromDb == null)
+                    {
+                        return BadRequest("Category not created!");
+                    }
+                    return Ok(categoryFromDb);
                 }
-                return Ok(brandFromDb);
-            }
-            catch (Exception)
-            {
-                throw new Exception("Error: Update Category failed! Failed uppon update.");
+                catch (Exception)
+                {
+                    throw new Exception("Error: Create Category failed! Failed uppon creation.");
+                }
             }
         }
 

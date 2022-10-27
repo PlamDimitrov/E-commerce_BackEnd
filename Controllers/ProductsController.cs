@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using ecommerce_API.Data;
 using ecommerce_API.Entities;
 using Microsoft.AspNetCore.Authorization;
+using ecommerce_API.Interfaces;
+using ecommerce_API.Repository;
 
 namespace ecommerce_API.Controllers
 {
@@ -16,11 +18,11 @@ namespace ecommerce_API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly ecommerce_APIContext _context;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(ecommerce_APIContext context)
+        public ProductsController(IProductRepository productRepository)
         {
-            _context = context;
+            _productRepository = productRepository;
         }
 
         // GET: api/Products
@@ -28,21 +30,55 @@ namespace ecommerce_API.Controllers
         [Route("getAll")]
         public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
         {
-            return await _context.Products.ToListAsync();
+            try
+            {
+                var product = await _productRepository.GetAll();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(product);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to get all products!");
+            }
         }
 
         // GET: api/Products/5
         [HttpGet("getOne/{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-
-            if (product == null)
+            try
             {
-                return NotFound();
+                var product = await _productRepository.GetOne(id);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(product);
             }
-
-            return product;
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to get all products!");
+            }
+        }
+        [HttpGet("getOne")]
+        public async Task<ActionResult<Product>> GetProduct(string title)
+        {
+            try
+            {
+                var product = await _productRepository.GetOne(title);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                return Ok(product);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to get all products!");
+            }
         }
 
         // PUT: api/Products/5
@@ -55,16 +91,13 @@ namespace ecommerce_API.Controllers
             {
                 return BadRequest();
             }
-
-            _context.Entry(product).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _productRepository.Update(product);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductExists(id))
+                if (!_productRepository.CheckIfExists(id))
                 {
                     return NotFound();
                 }
@@ -84,9 +117,16 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetProduct", new { id = product.Id }, product);
+            Product createdProduct = new Product();
+            try
+            {
+                createdProduct = await _productRepository.Create(product);
+            return Ok(createdProduct);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error: Not possible to create a product!");
+            }
         }
 
         // DELETE: api/Products/5
@@ -94,21 +134,30 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
+            var productExists = _productRepository.CheckIfExists(id);
+            if (productExists)
+            {
+                try
+                {
+                    var isProductDeleted = await _productRepository.Delete(id);
+                    if (isProductDeleted)
+                    {
+                        return Ok();
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Error: Not possible to delete the product!");
+                }
+            }
+            else
             {
                 return NotFound();
             }
-
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.Id == id);
         }
     }
 }

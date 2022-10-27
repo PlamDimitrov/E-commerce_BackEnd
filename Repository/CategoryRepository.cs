@@ -19,7 +19,7 @@ namespace ecommerce_API.Repository
             {
                 _context.Categories.Add(Category);
                 await _context.SaveChangesAsync();
-                return await _context.Categories.FindAsync(Category.Name);
+                return await _context.Categories.Where(c => c.Name == Category.Name).FirstAsync();
             }
             catch (Exception)
             {

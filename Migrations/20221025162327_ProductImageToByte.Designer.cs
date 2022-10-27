@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ecommerce_API.Data;
 
@@ -11,9 +12,10 @@ using ecommerce_API.Data;
 namespace ecommerce_API.Migrations
 {
     [DbContext(typeof(ecommerce_APIContext))]
-    partial class ecommerce_APIContextModelSnapshot : ModelSnapshot
+    [Migration("20221025162327_ProductImageToByte")]
+    partial class ProductImageToByte
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,6 +234,7 @@ namespace ecommerce_API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<byte[]>("Image")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<double>("Price")

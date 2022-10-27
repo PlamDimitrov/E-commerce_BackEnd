@@ -27,6 +27,7 @@ builder.Services.AddScoped<IUserService<User>, UserService>();
 builder.Services.AddScoped<IUserService<Admin>, AdmionService>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;

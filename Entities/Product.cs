@@ -18,8 +18,7 @@ namespace ecommerce_API.Entities
         public double Price { get; set; }
         [Required]
         public string Description { get; set; } = string.Empty;
-        [Required]
-        public string ImageUrl { get; set; } = string.Empty;
+        public byte[]? Image { get; set; } = null;
         [Required]
         public string Condition { get; set; } = string.Empty;
         [Required]
@@ -30,6 +29,7 @@ namespace ecommerce_API.Entities
         public bool Recommended { get; set; } = false;
 
         public int BrandId { get; set; }
+        [JsonIgnore]
         public Brand? Brand { get; set; }
         public ICollection<CategoryProduct>? Categories { get; set; }
     }

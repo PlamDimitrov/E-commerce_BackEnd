@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ecommerce_API.Data;
 
@@ -11,9 +12,10 @@ using ecommerce_API.Data;
 namespace ecommerce_API.Migrations
 {
     [DbContext(typeof(ecommerce_APIContext))]
-    partial class ecommerce_APIContextModelSnapshot : ModelSnapshot
+    [Migration("20221027114627_Fix")]
+    partial class Fix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

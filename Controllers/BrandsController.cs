@@ -68,22 +68,25 @@ namespace ecommerce_API.Controllers
         [Authorize]
         public async Task<ActionResult<Brand>> PostBrand(Brand brand)
         {
-            if (!_brandRepository.CheckIfExists(brand.Name))
+            if (_brandRepository.CheckIfExists(brand.Name))
             {
                 return BadRequest("Brand already exists!");
             }
-            try
+            else
             {
-                Brand brandFromDb = await _brandRepository.Create(brand);
-                if (brandFromDb == null)
+                try
                 {
-                    return BadRequest("Brand not created!");
+                    Brand brandFromDb = await _brandRepository.Create(brand);
+                    if (brandFromDb == null)
+                    {
+                        return BadRequest("Brand not created!");
+                    }
+                    return Ok(brandFromDb);
                 }
-                return Ok(brandFromDb);
-            }
-            catch (Exception)
-            {
-                throw new Exception("Error: Update Brand failed! Failed uppon update.");
+                catch (Exception)
+                {
+                    throw new Exception("Error: Create Brand failed! Failed uppon creation.");
+                }
             }
         }
 
@@ -94,13 +97,13 @@ namespace ecommerce_API.Controllers
         {
             try
             {
-            bool isDeleted = await _brandRepository.Delete(id);
-            if (!isDeleted)
-            {
-                return NotFound();
-            }
+                bool isDeleted = await _brandRepository.Delete(id);
+                if (!isDeleted)
+                {
+                    return NotFound();
+                }
 
-            return Ok();
+                return Ok();
             }
             catch (Exception)
             {

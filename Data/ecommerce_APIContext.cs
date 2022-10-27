@@ -15,6 +15,7 @@ namespace ecommerce_API.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<CategoryProduct> CategoryProduct { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<ExpiredToken> ExpiredTokens { get; set; }
         public DbSet<Menu> Menus { get; set; }

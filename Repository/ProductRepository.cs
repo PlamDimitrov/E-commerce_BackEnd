@@ -6,25 +6,26 @@ using System.Drawing.Drawing2D;
 
 namespace ecommerce_API.Repository
 {
-    public class BrandRepository : IBrandRepository
+    public class ProductRepository : IProductRepository
     {
         private readonly ecommerce_APIContext _context;
-        public BrandRepository(ecommerce_APIContext context)
+        public ProductRepository(ecommerce_APIContext context)
         {
             _context = context;
         }
 
-        public async Task<Brand?> Create(Brand brand)
+        public async Task<Product?> Create(Product product)
         {
             try
             {
-                _context.Brands.Add(brand);
+                _context.Products.Add(product);
+
                 await _context.SaveChangesAsync();
-                return await _context.Brands.Where(b => b.Name == brand.Name).FirstAsync();
+                return await _context.Products.Where(p=> p.Title == product.Title).FirstAsync();
             }
             catch (Exception)
             {
-                throw new Exception("Error: Creation of Brand failed! Problem with database connection.");
+                throw new Exception("Error: Creation of Product failed! Problem with database connection.");
             }
         }
 
@@ -32,14 +33,14 @@ namespace ecommerce_API.Repository
         {
             try
             {
-                Brand? brand = await _context.Brands.FindAsync(id);
-                if (brand == null)
+                Product? product = await _context.Products.FindAsync(id);
+                if (product == null)
                 {
                     return false;
                 }
                 else
                 {
-                _context.Brands.Remove(brand);
+                _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
                 return true;
                 }
@@ -47,13 +48,13 @@ namespace ecommerce_API.Repository
             catch (Exception)
             {
 
-                throw new Exception("Error: Delete Brand failed! Problem with database connection.");
+                throw new Exception("Error: Delete Product failed! Problem with database connection.");
             }
         }
 
-        public async Task<IEnumerable<Brand>> GetAll()
+        public async Task<IEnumerable<Product>> GetAll()
         {
-            return await _context.Brands.ToListAsync();
+            return await _context.Products.ToListAsync();
         }
 
         public Task<IEnumerable<Product>> GetBrandProducts(int id)
@@ -66,19 +67,19 @@ namespace ecommerce_API.Repository
             throw new NotImplementedException();
         }
 
-        public async Task<Brand?> GetOne(int id)
+        public async Task<Product?> GetOne(int id)
         {
-            return await _context.Brands.FindAsync(id);
+            return await _context.Products.FindAsync(id);
         }
 
-        public async Task<Brand?> GetOne(string name)
+        public async Task<Product?> GetOne(string name)
         {
-            return await _context.Brands.FindAsync(name);
+            return await _context.Products.FindAsync(name);
         }
 
-        public async Task<Brand?> RemoveImage(int id)
+        public async Task<Product?> RemoveImage(int id)
         {
-            Brand? fromDataBase = await _context.Brands
+            Product? fromDataBase = await _context.Products
                        .Where(e => e.Id == id)
                        .FirstOrDefaultAsync();
             if (fromDataBase == null)
@@ -92,9 +93,9 @@ namespace ecommerce_API.Repository
                 return fromDataBase;
             }
         }
-        public async Task<Brand> AddImage(int id, IFormFile file)
+        public async Task<Product> AddImage(int id, IFormFile file)
         {
-            Brand? fromDataBase = await _context.Brands
+            Product? fromDataBase = await _context.Products
                         .Where(e => e.Id == id)
                         .FirstOrDefaultAsync();
             if (fromDataBase == null)
@@ -122,28 +123,28 @@ namespace ecommerce_API.Repository
             }
         }
 
-        public async Task<Brand?> Update(Brand brand)
+        public async Task<Product?> Update(Product product)
         {
             try
             {
-                _context.Brands.Update(brand);
+                _context.Products.Update(product);
                 await _context.SaveChangesAsync();
-                return await _context.Brands.FindAsync(brand.Id);
+                return await _context.Products.FindAsync(product.Id);
             }
             catch (Exception)
             {
-                throw new Exception("Error: Update Brand failed! Problem with database connection.");
+                throw new Exception("Error: Update Product failed! Problem with database connection.");
             }
         }
 
         public bool CheckIfExists(int id)
         {
-            return _context.Brands.Any(e => e.Id == id);
+            return _context.Products.Any(e => e.Id == id);
         }
 
         public bool CheckIfExists(string name)
         {
-            return _context.Brands.Any(e => e.Name == name);
+            return _context.Products.Any(e => e.Title == name);
         }
     }
 }
